@@ -1,15 +1,10 @@
-#include "Search.h"
-#include <iostream>
-#include <string>
 
-using namespace std;
-
-class iterativeDeepener
+class IterativeDeepener
 {
     
 public:
-    iterativeDeepener(int* position, int* positionalInformation, int* pieceValues);
-    ~iterativeDeepener(void);
+    IterativeDeepener(int* position, int* positionalInformation, int* pieceValues);
+    ~IterativeDeepener(void);
     void iterativeDeepening(double time_limit);
     void recordPrincipalVariation(int* PVTable, int length);
     void displayPrincipalVariation(int length);

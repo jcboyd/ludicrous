@@ -1,16 +1,10 @@
-#include "Globals.h"
 
-#include <cmath>
-#include <iostream>
-
-using namespace std;
-
-class qMoveGenerator
+class QMoveGenerator
 {
 public:
     //Common routines
-    qMoveGenerator(int* position, int* positionalParameters, int* allCaptures);
-    ~qMoveGenerator(void);
+    QMoveGenerator(int* position, int* positionalParameters, int* allCaptures);
+    ~QMoveGenerator(void);
     int getArraySize(void);
     //Chess routines
     void shuffleMoves(int * pieceValues, int currentDepth);

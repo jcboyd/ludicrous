@@ -1,14 +1,15 @@
 #include "Globals.h"
-// #include "MoveGenerator.h"
-// #include "QMoveGenerator.h"
-// #include "Search.h"
-// #include "IterativeDeepener.h"
+#include "MoveGenerator.h"
+#include "QMoveGenerator.h"
+#include "Search.h"
+#include "IterativeDeepener.h"
 #include "ChessGame.h"
 #include <time.h>
 #include <iostream>
 #include <string>
 
 using namespace std;
+
 
 bool isAlpha(string characterString, int index)
 {
@@ -41,7 +42,7 @@ bool isNum(string characterString, int index)
 void moveGeneratorTest(void)
 {   
     string reaction;
-    chessGame game;
+    ChessGame game;
     cout << "Go!";
     clock_t init, final;
     init=clock();
@@ -49,7 +50,7 @@ void moveGeneratorTest(void)
     for(int i = 0; i < 1000000; i++)
     {
         int allMoves[80];
-        moveGenerator generator(game.getBoard(), game.getPositionalInformation(), allMoves);
+        MoveGenerator generator(game.getBoard(), game.getPositionalInformation(), allMoves);
         generator.getLegalMoves();
     }
     final=clock()-init;
@@ -63,7 +64,7 @@ void moveGeneratorTest(void)
 void searchTest(void)
 {
     string reaction;
-    chessGame game;
+    ChessGame game;
     //game.setPosition("r1bqkb1r/ppp2ppp/2n2n2/3pp3/2B1P3/2N2N2/PPPP1PPP/R1BQK2R w KQkq - 0 5", 32, 32);
 
     clock_t init, final;
@@ -73,7 +74,7 @@ void searchTest(void)
 
     //DEBUG QUIESCENCE SEARCHING
 
-    search::search newSearch(game.getBoard(), game.getPositionalInformation(), game.getPieceValues(), 6, 0, false);
+    Search newSearch(game.getBoard(), game.getPositionalInformation(), game.getPieceValues(), 6, 0, false);
     eval = newSearch.initiateSearch();
     final=clock()-init;
     cout << "\nElapsed time: ";
@@ -98,7 +99,7 @@ void searchTest(void)
 void perftTest(void)
 {
     int eval;
-    chessGame game;
+    ChessGame game;
     game.setPosition("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -", 32, 32);
     //game.makeMove(4, 5);
     //game.makeMove(-1, 118);
@@ -107,7 +108,7 @@ void perftTest(void)
 //  game.makeMove(115, 98);
 //  game.makeMove(19, 36);
 //  game.makeMove(98, 38);
-    search::search newSearch(game.getBoard(), game.getPositionalInformation(), game.getPieceValues(), 2, 0, false);
+    Search newSearch(game.getBoard(), game.getPositionalInformation(), game.getPieceValues(), 2, 0, false);
     eval = newSearch.initiateSearch();
 
     cout << "Total: " << newSearch.getNumberOfEvals() << "\n";
@@ -119,9 +120,9 @@ void perftTest(void)
 
 void iterativeDeepeningTest(void)
 {
-    chessGame newGame;
+    ChessGame newGame;
 
-    iterativeDeepener newIterativeDeepener(newGame.getBoard(), newGame.getPositionalInformation(), newGame.getPieceValues());
+    IterativeDeepener newIterativeDeepener(newGame.getBoard(), newGame.getPositionalInformation(), newGame.getPieceValues());
     newIterativeDeepener.reset(newGame.getBoard(), newGame.getPositionalInformation(), newGame.getPieceValues(), 8);
 
     newGame.makeMove(17, 49);
@@ -154,15 +155,15 @@ std::string helpMenu(void) {
             "\tanalyse\t\t\tset infinite search depth\n"
             "\tblitz\t\t\tlimit think time\n"
             "\t{a-h}{1-8}{a-h}{1-8}\tplay move\n"               
-            "\tauthor\t\t\tDisplay author details\n"
+            "\tauthor\t\t\tdisplay author details\n"
             "\thelp\t\t\tdisplay help menu\n"
             "\texit\t\t\texit\n";
 }
 
 void gameRoutine(void)
 {
-    chessGame newGame;
-    iterativeDeepener newIterativeDeepener(newGame.getBoard(), newGame.getPositionalInformation(), newGame.getPieceValues());
+    ChessGame newGame;
+    IterativeDeepener newIterativeDeepener(newGame.getBoard(), newGame.getPositionalInformation(), newGame.getPieceValues());
     
     //newGame.setPosition("8/8/3k4/8/K7/8/1p4PP/8 w - - 0 1", 49, 48);
 
@@ -174,6 +175,7 @@ void gameRoutine(void)
     cout << helpMenu();
     
     string command;
+    cout << "> ";
     cin >> command;
     
     while(command != "exit")
@@ -245,6 +247,7 @@ void gameRoutine(void)
             }
             else cout << "Command not found\n";
         }
+        cout << "> ";
         cin >> command;
     }
 }

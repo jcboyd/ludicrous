@@ -1,16 +1,10 @@
-#include "Globals.h"
 
-#include <cmath>
-#include <iostream>
-
-using namespace std;
-
-class moveGenerator
+class MoveGenerator
 {
 public:
     //Common routines
-    moveGenerator(int * position, int * positionalParameters, int * allMoves);
-    ~moveGenerator(void);
+    MoveGenerator(int * position, int * positionalParameters, int * allMoves);
+    ~MoveGenerator(void);
     int getArraySize(void);
     //Chess routines
     void shuffleMoves(int * previousRootNodes, int * refutationTable, int * pieceValues, int depth);

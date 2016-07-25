@@ -1,103 +1,106 @@
-#include "Search.h"
 #include <iostream>
-#include <algorithm>
+#include "Search.h"
+#include "MoveGenerator.h"
+#include "QMoveGenerator.h"
+#include "Globals.h"
 
 using namespace std;
 
-search::search(int* initialPosition, int* initialPositionalInformation, int* pieceValues, int depth, int lastEvaluation, bool endgame)
+
+Search::Search(int* initialPosition, int* initialPositionalInformation, int* pieceValues, int depth, int lastEvaluation, bool endgame)
 {
-    search::position = initialPosition;
-    search::positionalInformation = initialPositionalInformation;
-    search::pieceValues = pieceValues;
-    search::searchDepth = depth;
-    search::currentDepth = 0;
-    search::currentEvaluation = lastEvaluation;
-    search::numberOfEvals = 0;
-    search::numberOfQEvals = 0;
-    search::numberOfGeneratedMoves = 0;
-    search::numberOfQGeneratedMoves = 0;
-    search::lastNumberOfEvals = 0;
+    this->position = initialPosition;
+    this->positionalInformation = initialPositionalInformation;
+    this->pieceValues = pieceValues;
+    this->searchDepth = depth;
+    this->currentDepth = 0;
+    this->currentEvaluation = lastEvaluation;
+    this->numberOfEvals = 0;
+    this->numberOfQEvals = 0;
+    this->numberOfGeneratedMoves = 0;
+    this->numberOfQGeneratedMoves = 0;
+    this->lastNumberOfEvals = 0;
     for(int i = 0; i < 128; i++)
     {
-        search::positionalEvaluations[i] = 0;
-        search::captures[i] = 0;
-        search::specials[i] = 0;
-        search::pawnPromotions[i] = 0;
-        search::qMovesCounts[i] = 0;
+        this->positionalEvaluations[i] = 0;
+        this->captures[i] = 0;
+        this->specials[i] = 0;
+        this->pawnPromotions[i] = 0;
+        this->qMovesCounts[i] = 0;
         //for(int j = 0; j < 128; j++)
 //      {
 //          hhTable[i][j] = 0;
 //      }
     }
-    search::initialisePieceSquareTables(endgame);
-    search::currentPieceSquareTables = 0;
-    search::rootNodesRecorded = 0;
+    this->initialisePieceSquareTables(endgame);
+    this->currentPieceSquareTables = 0;
+    this->rootNodesRecorded = 0;
     for(int i = 0; i < 512; i++)
     {
-        search::refutationTable[i] = 0;
-        search::PVTable[i] = 0;
-        search::rootNodes[2*i] = 0;
-        search::rootNodes[2*i+1] = 0;
+        this->refutationTable[i] = 0;
+        this->PVTable[i] = 0;
+        this->rootNodes[2*i] = 0;
+        this->rootNodes[2*i+1] = 0;
     }   
 }
 
-search::~search(void)
+Search::~Search(void)
 {
 }
 
-void search::setPreviousRootNodes(int* previousRootNodes)
+void Search::setPreviousRootNodes(int* previousRootNodes)
 {
     for(int i = 0; i < 1024; i++)
     {
-        search::previousRootNodes[i] = previousRootNodes[i];
+        this->previousRootNodes[i] = previousRootNodes[i];
     }
 }
 
-void search::setPrincipalVariation(int* lastPrincipalVariation)
+void Search::setPrincipalVariation(int* lastPrincipalVariation)
 {
     for(int i = 0; i < searchDepth; i++)
     {
-        search::PVTable[32*(searchDepth - 1) + 2*(searchDepth - i - 1)] = lastPrincipalVariation[2*i];
-        search::PVTable[32*(searchDepth - 1) + 2*(searchDepth - i - 1) + 1] = lastPrincipalVariation[2*i+1];
-        search::refutationTable[16*i + 13] = lastPrincipalVariation[2*i];
-        search::refutationTable[16*i + 14] = lastPrincipalVariation[2*i+1];
-        search::refutationTable[16*i + 15] = 1;
+        this->PVTable[32*(searchDepth - 1) + 2*(searchDepth - i - 1)] = lastPrincipalVariation[2*i];
+        this->PVTable[32*(searchDepth - 1) + 2*(searchDepth - i - 1) + 1] = lastPrincipalVariation[2*i+1];
+        this->refutationTable[16*i + 13] = lastPrincipalVariation[2*i];
+        this->refutationTable[16*i + 14] = lastPrincipalVariation[2*i+1];
+        this->refutationTable[16*i + 15] = 1;
     }       
 }
 
-void search::initialisePieceSquareTables(bool endgame)
+void Search::initialisePieceSquareTables(bool endgame)
 {
     if(endgame)
     {
-        search::whitePieceSquareTables[PAWN] = WPE_SQUARES;
-        search::whitePieceSquareTables[KING] = WKE_SQUARES;
-        search::blackPieceSquareTables[PAWN] = BPE_SQUARES;
-        search::blackPieceSquareTables[KING] = BKE_SQUARES;
+        this->whitePieceSquareTables[PAWN] = WPE_SQUARES;
+        this->whitePieceSquareTables[KING] = WKE_SQUARES;
+        this->blackPieceSquareTables[PAWN] = BPE_SQUARES;
+        this->blackPieceSquareTables[KING] = BKE_SQUARES;
     }
     else 
     {
-        search::whitePieceSquareTables[PAWN] = WP_SQUARES;
-        search::whitePieceSquareTables[KING] = WK_SQUARES;
-        search::blackPieceSquareTables[PAWN] = BP_SQUARES;
-        search::blackPieceSquareTables[KING] = BK_SQUARES;
+        this->whitePieceSquareTables[PAWN] = WP_SQUARES;
+        this->whitePieceSquareTables[KING] = WK_SQUARES;
+        this->blackPieceSquareTables[PAWN] = BP_SQUARES;
+        this->blackPieceSquareTables[KING] = BK_SQUARES;
     }
 
-    search::whitePieceSquareTables[KNIGHT] = WN_SQUARES;
-    search::whitePieceSquareTables[BISHOP] = WB_SQUARES;
-    search::whitePieceSquareTables[ROOK] = WR_SQUARES;
-    search::whitePieceSquareTables[QUEEN] = WQ_SQUARES;
-    search::whitePieceSquareTables[6] = 0;
-    search::whitePieceSquareTables[7] = 0;
+    this->whitePieceSquareTables[KNIGHT] = WN_SQUARES;
+    this->whitePieceSquareTables[BISHOP] = WB_SQUARES;
+    this->whitePieceSquareTables[ROOK] = WR_SQUARES;
+    this->whitePieceSquareTables[QUEEN] = WQ_SQUARES;
+    this->whitePieceSquareTables[6] = 0;
+    this->whitePieceSquareTables[7] = 0;
     
-    search::blackPieceSquareTables[KNIGHT] = BN_SQUARES;
-    search::blackPieceSquareTables[BISHOP] = BB_SQUARES;
-    search::blackPieceSquareTables[ROOK] = BR_SQUARES;
-    search::blackPieceSquareTables[QUEEN] = BQ_SQUARES;
-    search::blackPieceSquareTables[6] = 0;
-    search::blackPieceSquareTables[7] = 0;
+    this->blackPieceSquareTables[KNIGHT] = BN_SQUARES;
+    this->blackPieceSquareTables[BISHOP] = BB_SQUARES;
+    this->blackPieceSquareTables[ROOK] = BR_SQUARES;
+    this->blackPieceSquareTables[QUEEN] = BQ_SQUARES;
+    this->blackPieceSquareTables[6] = 0;
+    this->blackPieceSquareTables[7] = 0;
 }
 
-int search::initiateSearch(void)
+int Search::initiateSearch(void)
 {
     if(positionalInformation[WHITE_TURN] == 1) //White turn
     {
@@ -109,31 +112,31 @@ int search::initiateSearch(void)
     }
 }
 
-void search::copyRootNodes(int * copyRootNodes)
+void Search::copyRootNodes(int * copyRootNodes)
 {
     for(int i = 0; i < 1024; i++)
     {
-        copyRootNodes[i] = search::rootNodes[i];
+        copyRootNodes[i] = this->rootNodes[i];
     }
 }
 
-int search::maxFastEvaluate(int fromSquare, int toSquare)
+int Search::maxFastEvaluate(int fromSquare, int toSquare)
 {
     currentPieceSquareTables = whitePieceSquareTables[positionalInformation[position[fromSquare] + 64]];
     return currentEvaluation + currentPieceSquareTables[toSquare] - currentPieceSquareTables[fromSquare];
 }
 
-int search::minFastEvaluate(int fromSquare, int toSquare)
+int Search::minFastEvaluate(int fromSquare, int toSquare)
 {
     currentPieceSquareTables = blackPieceSquareTables[positionalInformation[-position[fromSquare] + 64]];
     return currentEvaluation + currentPieceSquareTables[toSquare] - currentPieceSquareTables[fromSquare];
 }
 
-int search::treeSearchMax(int depth, int maxBest, int minBest)
+int Search::treeSearchMax(int depth, int maxBest, int minBest)
 {
     int arraySize, evaluation, castling, allMoves[256];
     
-    moveGenerator generator(position, positionalInformation, allMoves);
+    MoveGenerator generator(position, positionalInformation, allMoves);
     generator.getLegalMoves();
     generator.shuffleMoves(previousRootNodes, refutationTable, pieceValues, currentDepth + 1);
     arraySize = generator.getArraySize();
@@ -234,11 +237,11 @@ int search::treeSearchMax(int depth, int maxBest, int minBest)
     return maxBest;
 }
 
-int search::treeSearchMin(int depth, int maxBest, int minBest)
+int Search::treeSearchMin(int depth, int maxBest, int minBest)
 {
     int arraySize, evaluation, castling, allMoves[256];
     
-    moveGenerator generator(position, positionalInformation, allMoves);
+    MoveGenerator generator(position, positionalInformation, allMoves);
     generator.getLegalMoves();
     generator.shuffleMoves(previousRootNodes, refutationTable, pieceValues, currentDepth + 1);
     arraySize = generator.getArraySize();
@@ -339,7 +342,7 @@ int search::treeSearchMin(int depth, int maxBest, int minBest)
     return minBest;
 }
 
-void search::recordRootNodes(int fromSquare, int toSquare, int evaluation)
+void Search::recordRootNodes(int fromSquare, int toSquare, int evaluation)
 {
     rootNodes[rootNodesRecorded*2] = fromSquare;
     rootNodes[rootNodesRecorded*2 + 1] = toSquare;
@@ -349,39 +352,39 @@ void search::recordRootNodes(int fromSquare, int toSquare, int evaluation)
     rootNodesRecorded++;
 }
 
-bool search::checkCurrentVariation(int fromSquare, int toSquare, int moveIndex)
+bool Search::checkCurrentVariation(int fromSquare, int toSquare, int moveIndex)
 {
     if(currentVariation[moveIndex*2] == fromSquare and currentVariation[moveIndex*2 + 1] == toSquare) return true;
     return false;
 }
 
-void search::printMove(int fromSquare, int toSquare)
+void Search::printMove(int fromSquare, int toSquare)
 {
     cout << "(" << BOARD_SQUARE_NAMES[fromSquare] << BOARD_SQUARE_NAMES[fromSquare + 8] << ", ";
     cout << BOARD_SQUARE_NAMES[toSquare] << BOARD_SQUARE_NAMES[toSquare + 8] << ") : ";
 }
 
-void search::updatePVTable(int depth, int fromSquare, int toSquare)
+void Search::updatePVTable(int depth, int fromSquare, int toSquare)
 {
     for(int j = 0; j < depth - 1; j++)
     {
-        search::PVTable[32*depth + 2*j - 32] = search::PVTable[32*depth + 2*j - 64];
-        search::PVTable[32*depth + 2*j - 31] = search::PVTable[32*depth + 2*j - 63];
+        this->PVTable[32*depth + 2*j - 32] = this->PVTable[32*depth + 2*j - 64];
+        this->PVTable[32*depth + 2*j - 31] = this->PVTable[32*depth + 2*j - 63];
     }
-    search::PVTable[34*depth - 34] = fromSquare;
-    search::PVTable[34*depth - 33] = toSquare;
+    this->PVTable[34*depth - 34] = fromSquare;
+    this->PVTable[34*depth - 33] = toSquare;
 }
 
-void search::updateRefutationTable(int depth, int fromSquare, int toSquare)
+void Search::updateRefutationTable(int depth, int fromSquare, int toSquare)
 {
     refutationTable[16*depth + 2*refutationTable[16*depth + 8]] = fromSquare;
     refutationTable[16*depth + 2*refutationTable[16*depth + 8] + 1] = toSquare;
     refutationTable[16*depth + 8] = (refutationTable[16*depth + 8] + 1)%KILLER_MOVES;
 }
 
-void search::maxPlayMove(int fromSquare, int toSquare)
+void Search::maxPlayMove(int fromSquare, int toSquare)
 {
-    if(fromSquare < 0) search::maxPlaySpecialMove(-fromSquare, toSquare); //Special move
+    if(fromSquare < 0) this->maxPlaySpecialMove(-fromSquare, toSquare); //Special move
     else //Normal move
     {
         if(position[toSquare] != 0) //Capture
@@ -407,7 +410,7 @@ void search::maxPlayMove(int fromSquare, int toSquare)
     positionalInformation[WHITE_TURN] = 0;
 }
 
-void search::maxPlaySpecialMove(int fromSquare, int toSquare)
+void Search::maxPlaySpecialMove(int fromSquare, int toSquare)
 {
     if(toSquare > 111) //Pawn promotion
     {
@@ -482,7 +485,7 @@ void search::maxPlaySpecialMove(int fromSquare, int toSquare)
     }
 }
 
-void search::minPlayMove(int fromSquare, int toSquare)
+void Search::minPlayMove(int fromSquare, int toSquare)
 {
     if(fromSquare < 0) minPlaySpecialMove(-fromSquare, toSquare); //Special move
     else //Normal move
@@ -510,7 +513,7 @@ void search::minPlayMove(int fromSquare, int toSquare)
     positionalInformation[WHITE_TURN] = 1;
 }
 
-void search::minPlaySpecialMove(int fromSquare, int toSquare)
+void Search::minPlaySpecialMove(int fromSquare, int toSquare)
 {
     if(toSquare < 8) //Pawn promotion
     {
@@ -585,9 +588,9 @@ void search::minPlaySpecialMove(int fromSquare, int toSquare)
     }
 }
 
-void search::maxInvPlayMove(int fromSquare, int toSquare)
+void Search::maxInvPlayMove(int fromSquare, int toSquare)
 {
-    if(fromSquare < 0) search::maxInvPlaySpecialMove(-fromSquare, toSquare);//Special move 
+    if(fromSquare < 0) this->maxInvPlaySpecialMove(-fromSquare, toSquare);//Special move 
     else //Normal move
     {
         positionalInformation[position[toSquare]] = fromSquare;
@@ -609,7 +612,7 @@ void search::maxInvPlayMove(int fromSquare, int toSquare)
     positionalInformation[WHITE_TURN] = 1;
 }
 
-void search::maxInvPlaySpecialMove(int fromSquare, int toSquare)
+void Search::maxInvPlaySpecialMove(int fromSquare, int toSquare)
 {
     if(specials[currentDepth] == 0)
     {
@@ -669,7 +672,7 @@ void search::maxInvPlaySpecialMove(int fromSquare, int toSquare)
     specials[currentDepth] = 0;
 }
 
-void search::minInvPlayMove(int fromSquare, int toSquare)
+void Search::minInvPlayMove(int fromSquare, int toSquare)
 {
     if(fromSquare < 0) minInvPlaySpecialMove(-fromSquare, toSquare); //Special move
     else //Normal move
@@ -693,7 +696,7 @@ void search::minInvPlayMove(int fromSquare, int toSquare)
     positionalInformation[WHITE_TURN] = 0;
 }
 
-void search::minInvPlaySpecialMove(int fromSquare, int toSquare)
+void Search::minInvPlaySpecialMove(int fromSquare, int toSquare)
 {
     if(specials[currentDepth] == 0)
     {
@@ -752,37 +755,37 @@ void search::minInvPlaySpecialMove(int fromSquare, int toSquare)
     specials[currentDepth] = 0;
 }
 
-int search::getBestFromMove(void)
+int Search::getBestFromMove(void)
 {
-    return search::PVTable[34*search::searchDepth - 34];
+    return this->PVTable[34*this->searchDepth - 34];
 }
 
-int search::getBestToMove(void)
+int Search::getBestToMove(void)
 {
-    return search::PVTable[34*search::searchDepth - 33];
+    return this->PVTable[34*this->searchDepth - 33];
 }
 
-long search::getNumberOfEvals(void)
+long Search::getNumberOfEvals(void)
 {
-    return search::numberOfEvals;
+    return this->numberOfEvals;
 }
 
-long search::getNumberOfQEvals(void)
+long Search::getNumberOfQEvals(void)
 {
     return numberOfQEvals;
 }
 
-long search::getNumberOfGeneratedMoves(void)
+long Search::getNumberOfGeneratedMoves(void)
 {
-    return search::numberOfGeneratedMoves;
+    return this->numberOfGeneratedMoves;
 }
 
-long search::getNumberOfQGeneratedMoves(void)
+long Search::getNumberOfQGeneratedMoves(void)
 {
-    return search::numberOfQGeneratedMoves;
+    return this->numberOfQGeneratedMoves;
 }
 
-void search::displayPosition(void)
+void Search::displayPosition(void)
 {
     cout << "\n+ - + - + - + - + - + - + - + - +\n";
     for(int j = 7; j >= 0; j--)
@@ -790,10 +793,10 @@ void search::displayPosition(void)
         cout << "| ";
         for(int k = 0; k < 8; k++)
         {
-            int squareValue = search::position[j*16 + k];
+            int squareValue = this->position[j*16 + k];
             if(squareValue != 0)
             {
-                int pieceType = search::positionalInformation[abs(search::position[j*16 + k]) + 64];
+                int pieceType = this->positionalInformation[abs(this->position[j*16 + k]) + 64];
                 if(squareValue > 0)
                 {
                     cout << WHITE_PIECE_NAMES[pieceType];
@@ -813,7 +816,7 @@ void search::displayPosition(void)
     }
 }
 
-void search::displayPVTable(void)
+void Search::displayPVTable(void)
 {
     cout << "\n\n";
     for(int j = 16; j >= 0; j--)
@@ -821,34 +824,34 @@ void search::displayPVTable(void)
         cout << "|";
         for(int k = 0; k < 32; k++)
         {
-            cout << search::PVTable[j*32 + k];
+            cout << this->PVTable[j*32 + k];
             cout << "|";
         }
         cout << "\n";
     }
 }
 
-int* search::getPVTable(void)
+int* Search::getPVTable(void)
 {
-    return search::PVTable;
+    return this->PVTable;
 }
 
 //Standing pat is a sort of advanced prune which relies on the principle that
 //the player to move can always at least equal the static score. Hence we
 //record a new lower bound if necessary.
-int search::qSearchMax(int maxBest, int minBest)
+int Search::qSearchMax(int maxBest, int minBest)
 {
     if(currentEvaluation >= minBest) return minBest;
     if(currentEvaluation > maxBest) maxBest = currentEvaluation;
     
     int allCaptures[128];
-    qMoveGenerator generator(search::position, search::positionalInformation, allCaptures);
+    QMoveGenerator generator(this->position, this->positionalInformation, allCaptures);
     generator.getLegalCaptures();
 #ifdef NODE_ORDERING
     generator.shuffleMoves(pieceValues, currentDepth + 1);
 #endif
     int arraySize = generator.getArraySize();
-    search::numberOfQGeneratedMoves += arraySize/2;
+    this->numberOfQGeneratedMoves += arraySize/2;
     if(arraySize == 0) 
     {
         if(positionalInformation[IN_CHECK]) return -MATERIAL_VALUES[KING];
@@ -858,11 +861,11 @@ int search::qSearchMax(int maxBest, int minBest)
     for(int i = 0 ; i < arraySize; i += 2)
     {
 #ifdef DEBUG
-        search::currentVariation[2*(currentDepth - 1)] = allCaptures[i];
-        search::currentVariation[2*currentDepth - 1] = allCaptures[i+1];
+        this->currentVariation[2*(currentDepth - 1)] = allCaptures[i];
+        this->currentVariation[2*currentDepth - 1] = allCaptures[i+1];
 #endif
-        search::positionalInformation[LAST_FROM_SQUARE] = allCaptures[i];
-        search::positionalInformation[LAST_TO_SQUARE] = allCaptures[i+1];
+        this->positionalInformation[LAST_FROM_SQUARE] = allCaptures[i];
+        this->positionalInformation[LAST_TO_SQUARE] = allCaptures[i+1];
         maxPlayMove(allCaptures[i], allCaptures[i+1]);
         int evaluation = qSearchMin(maxBest, minBest);
         if(evaluation > maxBest) maxBest = evaluation;
@@ -877,19 +880,19 @@ int search::qSearchMax(int maxBest, int minBest)
     return maxBest;
 }
 
-int search::qSearchMin(int maxBest, int minBest)
+int Search::qSearchMin(int maxBest, int minBest)
 {   
     if(currentEvaluation <= maxBest) return maxBest;
     if(currentEvaluation < minBest) minBest = currentEvaluation;
     
     int allCaptures[128];
-    qMoveGenerator generator(search::position, search::positionalInformation, allCaptures);
+    QMoveGenerator generator(this->position, this->positionalInformation, allCaptures);
     generator.getLegalCaptures();
 #ifdef NODE_ORDERING
     generator.shuffleMoves(pieceValues, currentDepth + 1);
 #endif
     int arraySize = generator.getArraySize();
-    search::numberOfQGeneratedMoves += arraySize/2;
+    this->numberOfQGeneratedMoves += arraySize/2;
     if(arraySize == 0) 
     {
         if(positionalInformation[IN_CHECK]) return MATERIAL_VALUES[KING];
@@ -899,11 +902,11 @@ int search::qSearchMin(int maxBest, int minBest)
     for(int i = 0 ; i < arraySize; i += 2)
     {
 #ifdef DEBUG
-        search::currentVariation[2*(currentDepth - 1)] = allCaptures[i];
-        search::currentVariation[2*currentDepth - 1] = allCaptures[i+1];
+        this->currentVariation[2*(currentDepth - 1)] = allCaptures[i];
+        this->currentVariation[2*currentDepth - 1] = allCaptures[i+1];
 #endif
-        search::positionalInformation[LAST_FROM_SQUARE] = allCaptures[i];
-        search::positionalInformation[LAST_TO_SQUARE] = allCaptures[i+1];
+        this->positionalInformation[LAST_FROM_SQUARE] = allCaptures[i];
+        this->positionalInformation[LAST_TO_SQUARE] = allCaptures[i+1];
         minPlayMove(allCaptures[i], allCaptures[i+1]);
         int evaluation = qSearchMax(maxBest, minBest);
         if(evaluation < minBest) minBest = evaluation;
@@ -919,7 +922,7 @@ int search::qSearchMin(int maxBest, int minBest)
     return minBest;
 }
 
-void search::displayPositionalInformation(void)
+void Search::displayPositionalInformation(void)
 {
     for(int i = 7; i >= 0; i--)
     {
@@ -950,7 +953,7 @@ void search::displayPositionalInformation(void)
     cout << "\n";
 }
 
-void search::displayPieceValues(void)
+void Search::displayPieceValues(void)
 {
     cout << "\n";
     for(int i = 7; i >= 0; i--)
@@ -958,14 +961,14 @@ void search::displayPieceValues(void)
         cout << "|";
         for(int j = 0; j < 16; j++)
         {
-            cout << search::pieceValues[16*i + j];
+            cout << this->pieceValues[16*i + j];
             cout << "\t|";
         }
         cout << "\n";
     }
 }
 
-void search::displayRefutationTable(void)
+void Search::displayRefutationTable(void)
 {
     cout << "\n";
     for(int i = 7; i >= 0; i--)
@@ -973,21 +976,21 @@ void search::displayRefutationTable(void)
         cout << "|";
         for(int j = 0; j < 16; j++)
         {
-            cout << search::refutationTable[16*i + j];
+            cout << this->refutationTable[16*i + j];
             cout << "\t|";
         }
         cout << "\n";
     }
 }
 
-void search::displayAll(void)
+void Search::displayAll(void)
 {
     displayPosition();
     displayPositionalInformation();
     displayPieceValues();
 }
 
-void search::displayCurrentVariation(int depth)
+void Search::displayCurrentVariation(int depth)
 {
     for(int i = 0; i < depth; i++)
     {
@@ -995,21 +998,21 @@ void search::displayCurrentVariation(int depth)
     }
 }
 
-//int search::treeSearchMax2(int depth, int maxBest, int minBest)
+//int Search::treeSearchMax2(int depth, int maxBest, int minBest)
 //{
 //  int evaluation, i, arraySize, castling, allMoves[256];
 //  
-//  moveGenerator generator(search::position, search::positionalInformation, allMoves);
+//  MoveGenerator generator(this->position, this->positionalInformation, allMoves);
 //  generator.getLegalMoves();
 //  arraySize = generator.getArraySize();
 //#ifdef NODE_ORDERING
 //  generator.shuffleMoves(previousRootNodes, refutationTable, pieceValues, currentDepth + 1);
 //#endif
-//  search::numberOfGeneratedMoves += arraySize/2;
+//  this->numberOfGeneratedMoves += arraySize/2;
 //  
 //  if(arraySize == 0) //Checkmate or stalemate
 //  {
-//      if(search::positionalInformation[IN_CHECK]) //Player in check - checkmate
+//      if(this->positionalInformation[IN_CHECK]) //Player in check - checkmate
 //      {
 //          return -MATERIAL_VALUES[KING];
 //      }
@@ -1039,22 +1042,22 @@ void search::displayCurrentVariation(int depth)
 //              else
 //              {
 //#ifdef DEBUG
-//                  search::currentVariation[2*currentDepth - 2] = allMoves[i];
-//                  search::currentVariation[2*currentDepth - 1] = allMoves[i+1];
+//                  this->currentVariation[2*currentDepth - 2] = allMoves[i];
+//                  this->currentVariation[2*currentDepth - 1] = allMoves[i+1];
 //#endif
-//                  search::positionalInformation[LAST_FROM_SQUARE] = allMoves[i];
-//                  search::positionalInformation[LAST_TO_SQUARE] = allMoves[i+1];
-//                  search::maxPlayMove(allMoves[i], allMoves[i+1]);
-//                  evaluation = search::qSearchMin(maxBest, minBest);
-//                  search::maxInvPlayMove(allMoves[i], allMoves[i+1]);
+//                  this->positionalInformation[LAST_FROM_SQUARE] = allMoves[i];
+//                  this->positionalInformation[LAST_TO_SQUARE] = allMoves[i+1];
+//                  this->maxPlayMove(allMoves[i], allMoves[i+1]);
+//                  evaluation = this->qSearchMin(maxBest, minBest);
+//                  this->maxInvPlayMove(allMoves[i], allMoves[i+1]);
 //              }
 //          }
 //          else //Special move
 //          {
-//              search::maxPlayMove(allMoves[i], allMoves[i+1]);
+//              this->maxPlayMove(allMoves[i], allMoves[i+1]);
 //              evaluation = currentEvaluation;
 //              numberOfEvals++;
-//              search::maxInvPlayMove(allMoves[i], allMoves[i+1]);
+//              this->maxInvPlayMove(allMoves[i], allMoves[i+1]);
 //          }
 //#ifdef ALPHA_BETA
 //          if(evaluation >= minBest)
@@ -1067,10 +1070,10 @@ void search::displayCurrentVariation(int depth)
 //          if(evaluation > maxBest)
 //          {
 //              maxBest = evaluation;
-//              search::updatePVTable(depth, allMoves[i], allMoves[i+1]);
+//              this->updatePVTable(depth, allMoves[i], allMoves[i+1]);
 //          }
 //#ifdef PERFT
-//          if(search::searchDepth == 1)
+//          if(this->searchDepth == 1)
 //          {
 //              printMove(allMoves[i], allMoves[i+1]);
 //              cout << 1 << "\n";
@@ -1085,10 +1088,10 @@ void search::displayCurrentVariation(int depth)
 //      if(depth > 3 and ! positionalInformation[IN_CHECK])
 //      {
 //          
-//          search::positionalInformation[WHITE_TURN] = !search::positionalInformation[WHITE_TURN];
-//          search::positionalInformation[LAST_FROM_SQUARE] = positionalInformation[positionalInformation[WHITE_KING_INDEX]];
-//          search::positionalInformation[LAST_TO_SQUARE] = -100;
-//          evaluation = search::treeSearchMin(depth - 3, maxBest, minBest);
+//          this->positionalInformation[WHITE_TURN] = !this->positionalInformation[WHITE_TURN];
+//          this->positionalInformation[LAST_FROM_SQUARE] = positionalInformation[positionalInformation[WHITE_KING_INDEX]];
+//          this->positionalInformation[LAST_TO_SQUARE] = -100;
+//          evaluation = this->treeSearchMin(depth - 3, maxBest, minBest);
 //          if(evaluation >= minBest)
 //          {
 //              currentDepth--;
@@ -1115,21 +1118,21 @@ void search::displayCurrentVariation(int depth)
 //          else
 //          {
 //#ifdef DEBUG
-//              search::currentVariation[2*currentDepth - 2] = allMoves[i];
-//              search::currentVariation[2*currentDepth - 1] = allMoves[i+1];
+//              this->currentVariation[2*currentDepth - 2] = allMoves[i];
+//              this->currentVariation[2*currentDepth - 1] = allMoves[i+1];
 //#endif
-//              //search::positionalInformation[LAST_FROM_SQUARE] = allMoves[i];
-//              //search::positionalInformation[LAST_TO_SQUARE] = allMoves[i+1];
-//              //search::maxPlayMove(allMoves[i], allMoves[i+1]);
+//              //this->positionalInformation[LAST_FROM_SQUARE] = allMoves[i];
+//              //this->positionalInformation[LAST_TO_SQUARE] = allMoves[i+1];
+//              //this->maxPlayMove(allMoves[i], allMoves[i+1]);
 //              
 //              
 //              if(i > LATE_MOVE_INDEX and depth > 2 and position[abs(allMoves[i+1])] == 0)
 //              {
-//                  search::positionalInformation[LAST_FROM_SQUARE] = allMoves[i];
-//                  search::positionalInformation[LAST_TO_SQUARE] = allMoves[i+1];
-//                  search::maxPlayMove(allMoves[i], allMoves[i+1]);
-//                  evaluation = search::treeSearchMin(depth - 2, maxBest, minBest);
-//                  search::maxInvPlayMove(allMoves[i], allMoves[i+1]);
+//                  this->positionalInformation[LAST_FROM_SQUARE] = allMoves[i];
+//                  this->positionalInformation[LAST_TO_SQUARE] = allMoves[i+1];
+//                  this->maxPlayMove(allMoves[i], allMoves[i+1]);
+//                  evaluation = this->treeSearchMin(depth - 2, maxBest, minBest);
+//                  this->maxInvPlayMove(allMoves[i], allMoves[i+1]);
 //                  positionalInformation[CASTLING] = castling;
 //              }
 //              else
@@ -1139,23 +1142,23 @@ void search::displayCurrentVariation(int depth)
 //              
 //              if(evaluation > maxBest)
 //              {
-//                  search::positionalInformation[LAST_FROM_SQUARE] = allMoves[i];
-//                  search::positionalInformation[LAST_TO_SQUARE] = allMoves[i+1];
-//                  search::maxPlayMove(allMoves[i], allMoves[i+1]);
-//                  evaluation = search::treeSearchMin(depth - 1, maxBest, minBest);
-//                  search::maxInvPlayMove(allMoves[i], allMoves[i+1]);
+//                  this->positionalInformation[LAST_FROM_SQUARE] = allMoves[i];
+//                  this->positionalInformation[LAST_TO_SQUARE] = allMoves[i+1];
+//                  this->maxPlayMove(allMoves[i], allMoves[i+1]);
+//                  evaluation = this->treeSearchMin(depth - 1, maxBest, minBest);
+//                  this->maxInvPlayMove(allMoves[i], allMoves[i+1]);
 //                  positionalInformation[CASTLING] = castling;
 //              }
 //              
 //              
-//              //evaluation = search::treeSearchMin(depth - 1, maxBest, minBest);
+//              //evaluation = this->treeSearchMin(depth - 1, maxBest, minBest);
 //              
 //              
 //              
 //              
 //              
 //              
-//              //search::maxInvPlayMove(allMoves[i], allMoves[i+1]);
+//              //this->maxInvPlayMove(allMoves[i], allMoves[i+1]);
 //              //positionalInformation[CASTLING] = castling; //Restore castling information
 //#ifdef ALPHA_BETA
 //              if(evaluation >= minBest)
@@ -1168,7 +1171,7 @@ void search::displayCurrentVariation(int depth)
 //              if(evaluation > maxBest)
 //              {
 //                  maxBest = evaluation;
-//                  search::updatePVTable(depth, allMoves[i], allMoves[i+1]);
+//                  this->updatePVTable(depth, allMoves[i], allMoves[i+1]);
 //              }
 //#ifdef PERFT
 //              if(searchDepth - depth == 0)
@@ -1190,21 +1193,21 @@ void search::displayCurrentVariation(int depth)
 //  return maxBest;
 //}
 //
-//int search::treeSearchMin2(int depth, int maxBest, int minBest)
+//int Search::treeSearchMin2(int depth, int maxBest, int minBest)
 //{
 //  int evaluation, i, arraySize, castling, allMoves[256];
 //  
-//  moveGenerator generator(search::position, search::positionalInformation, allMoves);
+//  MoveGenerator generator(this->position, this->positionalInformation, allMoves);
 //  generator.getLegalMoves();
 //#ifdef NODE_ORDERING
 //  generator.shuffleMoves(previousRootNodes, refutationTable, pieceValues, currentDepth + 1);
 //#endif
 //  arraySize = generator.getArraySize();
-//  search::numberOfGeneratedMoves += arraySize/2;
+//  this->numberOfGeneratedMoves += arraySize/2;
 //  
 //  if(arraySize == 0) //Checkmate  or stalemate
 //  {
-//      if(search::positionalInformation[IN_CHECK]) return MATERIAL_VALUES[KING];
+//      if(this->positionalInformation[IN_CHECK]) return MATERIAL_VALUES[KING];
 //      else return 0;
 //  }
 //  
@@ -1228,22 +1231,22 @@ void search::displayCurrentVariation(int depth)
 //              else
 //              {
 //#ifdef DEBUG
-//                  search::currentVariation[2*currentDepth - 2] = allMoves[i];
-//                  search::currentVariation[2*currentDepth - 1] = allMoves[i+1];
+//                  this->currentVariation[2*currentDepth - 2] = allMoves[i];
+//                  this->currentVariation[2*currentDepth - 1] = allMoves[i+1];
 //#endif
-//                  search::positionalInformation[LAST_FROM_SQUARE] = allMoves[i];
-//                  search::positionalInformation[LAST_TO_SQUARE] = allMoves[i+1];
-//                  search::minPlayMove(allMoves[i], allMoves[i+1]);
-//                  evaluation = search::qSearchMax(maxBest, minBest);
-//                  search::minInvPlayMove(allMoves[i], allMoves[i+1]);
+//                  this->positionalInformation[LAST_FROM_SQUARE] = allMoves[i];
+//                  this->positionalInformation[LAST_TO_SQUARE] = allMoves[i+1];
+//                  this->minPlayMove(allMoves[i], allMoves[i+1]);
+//                  evaluation = this->qSearchMax(maxBest, minBest);
+//                  this->minInvPlayMove(allMoves[i], allMoves[i+1]);
 //              }
 //          }
 //          else //Special move
 //          {
-//              search::minPlayMove(allMoves[i], allMoves[i+1]);
+//              this->minPlayMove(allMoves[i], allMoves[i+1]);
 //              evaluation = currentEvaluation;
 //              numberOfEvals++;
-//              search::minInvPlayMove(allMoves[i], allMoves[i+1]);
+//              this->minInvPlayMove(allMoves[i], allMoves[i+1]);
 //          }
 //#ifdef ALPHA_BETA
 //          if(evaluation <= maxBest) 
@@ -1256,10 +1259,10 @@ void search::displayCurrentVariation(int depth)
 //          if(evaluation < minBest)
 //          {
 //              minBest = evaluation;
-//              search::updatePVTable(depth, allMoves[i], allMoves[i+1]);
+//              this->updatePVTable(depth, allMoves[i], allMoves[i+1]);
 //          }
 //#ifdef PERFT
-//          if(search::searchDepth == 1)
+//          if(this->searchDepth == 1)
 //          {
 //              printMove(allMoves[i], allMoves[i+1]);
 //              cout << 1 << "\n";
@@ -1271,10 +1274,10 @@ void search::displayCurrentVariation(int depth)
 //  {
 //      if(depth > 3 and ! positionalInformation[IN_CHECK])
 //      {
-//          search::positionalInformation[WHITE_TURN] = !search::positionalInformation[WHITE_TURN];
-//          search::positionalInformation[LAST_FROM_SQUARE] = positionalInformation[positionalInformation[BLACK_KING_INDEX]];
-//          search::positionalInformation[LAST_TO_SQUARE] = -100;
-//          evaluation = search::treeSearchMax(depth - 3, maxBest, minBest);
+//          this->positionalInformation[WHITE_TURN] = !this->positionalInformation[WHITE_TURN];
+//          this->positionalInformation[LAST_FROM_SQUARE] = positionalInformation[positionalInformation[BLACK_KING_INDEX]];
+//          this->positionalInformation[LAST_TO_SQUARE] = -100;
+//          evaluation = this->treeSearchMax(depth - 3, maxBest, minBest);
 //          if(evaluation <= maxBest)
 //          {
 //              currentDepth--;
@@ -1302,20 +1305,20 @@ void search::displayCurrentVariation(int depth)
 //          else
 //          {
 //#ifdef DEBUG
-//              search::currentVariation[2*currentDepth - 2] = allMoves[i];
-//              search::currentVariation[2*currentDepth - 1] = allMoves[i+1];
+//              this->currentVariation[2*currentDepth - 2] = allMoves[i];
+//              this->currentVariation[2*currentDepth - 1] = allMoves[i+1];
 //#endif
-//              //search::positionalInformation[LAST_FROM_SQUARE] = allMoves[i];
-//              //search::positionalInformation[LAST_TO_SQUARE] = allMoves[i+1];
-//              //search::minPlayMove(allMoves[i], allMoves[i+1]);
+//              //this->positionalInformation[LAST_FROM_SQUARE] = allMoves[i];
+//              //this->positionalInformation[LAST_TO_SQUARE] = allMoves[i+1];
+//              //this->minPlayMove(allMoves[i], allMoves[i+1]);
 //              
 //              if(i > LATE_MOVE_INDEX and depth > 2 and position[abs(allMoves[i+1])] == 0)
 //              {
-//                  search::positionalInformation[LAST_FROM_SQUARE] = allMoves[i];
-//                  search::positionalInformation[LAST_TO_SQUARE] = allMoves[i+1];
-//                  search::minPlayMove(allMoves[i], allMoves[i+1]);
-//                  evaluation = search::treeSearchMax(depth - 2, maxBest, minBest);
-//                  search::minInvPlayMove(allMoves[i], allMoves[i+1]);
+//                  this->positionalInformation[LAST_FROM_SQUARE] = allMoves[i];
+//                  this->positionalInformation[LAST_TO_SQUARE] = allMoves[i+1];
+//                  this->minPlayMove(allMoves[i], allMoves[i+1]);
+//                  evaluation = this->treeSearchMax(depth - 2, maxBest, minBest);
+//                  this->minInvPlayMove(allMoves[i], allMoves[i+1]);
 //                  positionalInformation[CASTLING] = castling;
 //              }
 //              else
@@ -1325,18 +1328,18 @@ void search::displayCurrentVariation(int depth)
 //              
 //              if(evaluation < minBest)
 //              {
-//                  search::positionalInformation[LAST_FROM_SQUARE] = allMoves[i];
-//                  search::positionalInformation[LAST_TO_SQUARE] = allMoves[i+1];
-//                  search::minPlayMove(allMoves[i], allMoves[i+1]);
-//                  evaluation = search::treeSearchMax(depth - 1, maxBest, minBest);
-//                  search::minInvPlayMove(allMoves[i], allMoves[i+1]);
+//                  this->positionalInformation[LAST_FROM_SQUARE] = allMoves[i];
+//                  this->positionalInformation[LAST_TO_SQUARE] = allMoves[i+1];
+//                  this->minPlayMove(allMoves[i], allMoves[i+1]);
+//                  evaluation = this->treeSearchMax(depth - 1, maxBest, minBest);
+//                  this->minInvPlayMove(allMoves[i], allMoves[i+1]);
 //                  positionalInformation[CASTLING] = castling;
 //              }
 //              
-//              //evaluation = search::treeSearchMax(depth - 1, maxBest, minBest);
+//              //evaluation = this->treeSearchMax(depth - 1, maxBest, minBest);
 //              
 //              
-//              //search::minInvPlayMove(allMoves[i], allMoves[i+1]);
+//              //this->minInvPlayMove(allMoves[i], allMoves[i+1]);
 //              //positionalInformation[CASTLING] = castling; //Restore castling information
 //#ifdef ALPHA_BETA
 //              if(evaluation <= maxBest)
@@ -1350,7 +1353,7 @@ void search::displayCurrentVariation(int depth)
 //              {
 //                  minBest = evaluation;
 //                  
-//                  search::updatePVTable(depth, allMoves[i], allMoves[i+1]);
+//                  this->updatePVTable(depth, allMoves[i], allMoves[i+1]);
 //              }
 //#ifdef PERFT
 //              if(depth == searchDepth)

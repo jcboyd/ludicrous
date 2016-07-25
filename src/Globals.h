@@ -1,3 +1,5 @@
+#include <cstdlib>
+
 #ifndef H_RANDOM
 #define H_RANDOM
 
@@ -12,7 +14,6 @@
 //#define STATIC_EXCHANGE_EVALUATION
 //define Q_STATIC_EXCHANGE_EVALUATION
 
-#include <cstdlib>
 
 const int LATE_MOVE_INDEX = 6;
 const int NULL_MOVE_FLAG = -100;

@@ -1,11 +1,9 @@
-#include "MoveGenerator.h"
-#include "QMoveGenerator.h"
 
-class search
+class Search
 {
 public:
-    search(int* initialPosition, int* initialPositionalInformation, int* pieceValues, int depth, int lastEvalaution, bool endgame);
-    ~search(void);
+    Search(int* initialPosition, int* initialPositionalInformation, int* pieceValues, int depth, int lastEvalaution, bool endgame);
+    ~Search(void);
     void initialisePieceSquareTables(bool endgame);
     void setPrincipalVariation(int* lastPrincipalVariation);
     int initiateSearch(void);

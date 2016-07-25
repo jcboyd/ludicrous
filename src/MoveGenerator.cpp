@@ -1,10 +1,15 @@
-
+#include <iostream>
+#include <cmath>
 #include "MoveGenerator.h"
+#include "Globals.h"
 
-moveGenerator::moveGenerator(int * position, int * positionalInformation, int * allMoves)
+using namespace std;
+
+
+MoveGenerator::MoveGenerator(int * position, int * positionalInformation, int * allMoves)
 {
-    moveGenerator::position = position;
-    moveGenerator::positionalInformation = positionalInformation;
+    this->position = position;
+    this->positionalInformation = positionalInformation;
     
     whiteTurn = positionalInformation[WHITE_TURN];
     turnSwitch = (-1 + 2*whiteTurn);
@@ -14,22 +19,22 @@ moveGenerator::moveGenerator(int * position, int * positionalInformation, int * 
     lastFromSquare = positionalInformation[LAST_FROM_SQUARE];
     lastToSquare = positionalInformation[LAST_TO_SQUARE];
     
-    moveGenerator::allMoves = allMoves;
+    this->allMoves = allMoves;
     arraySize = 0;
 }
 
-moveGenerator::~moveGenerator(void) 
+MoveGenerator::~MoveGenerator(void) 
 {
 }
 
-int moveGenerator::getArraySize(void)
+int MoveGenerator::getArraySize(void)
 {
     return arraySize;
 }
 
 //Support functions
 
-bool moveGenerator::attackOnKing(int direction)
+bool MoveGenerator::attackOnKing(int direction)
 {
     int searchSquare = lastToSquare + direction;
     while(searchSquare != kingSquare)
@@ -42,7 +47,7 @@ bool moveGenerator::attackOnKing(int direction)
     return true; //King square reached without obstruction, hence check.
 }
 
-bool moveGenerator::revealedAttackOnKing(int direction)
+bool MoveGenerator::revealedAttackOnKing(int direction)
 {
     int boardSquare, squareValue, pieceType;
     boardSquare = kingSquare;
@@ -84,7 +89,7 @@ bool moveGenerator::revealedAttackOnKing(int direction)
     }
 }
 
-void moveGenerator::determinePin(int defendingSquare, int searchIndex)
+void MoveGenerator::determinePin(int defendingSquare, int searchIndex)
 {
     int boardSquare, squareValue, pieceType;
     boardSquare = defendingSquare;
@@ -109,7 +114,7 @@ void moveGenerator::determinePin(int defendingSquare, int searchIndex)
     }
 }
 
-void moveGenerator::line(int pieceSquare, int targetSquare, int direction)
+void MoveGenerator::line(int pieceSquare, int targetSquare, int direction)
 {
     int searchSquare = pieceSquare;
     while(true)
@@ -128,7 +133,7 @@ void moveGenerator::line(int pieceSquare, int targetSquare, int direction)
 
 //Principal move manager
 
-void moveGenerator::getLegalMoves(void)
+void MoveGenerator::getLegalMoves(void)
 {
     bool directCheck, revealedCheck;
     int toDiff, fromDiff, lastPieceType, boardSquare, i;
@@ -169,155 +174,155 @@ void moveGenerator::getLegalMoves(void)
         }
         lastPieceType = positionalInformation[position[lastToSquare] + 64];
     }
-if(lastToSquare != NULL_MOVE_FLAG)
-{   
-    //Search for direct check:
-    fromDiff = lastFromSquare - kingSquare;
-    switch(lastPieceType)
-    {
-        case PAWN : //Pawn
-            toDiff = turnSwitch*(lastToSquare - kingSquare);
-            if(toDiff == 15 || toDiff == 17)
-            {
-                attackingSquare = lastToSquare;
-                attackDirection = -turnSwitch*toDiff;
-                directCheck = true;
-            }
-            if(lastFromSquare < 0)
-            {
-                if(! directCheck)
+    if(lastToSquare != NULL_MOVE_FLAG)
+    {   
+        //Search for direct check:
+        fromDiff = lastFromSquare - kingSquare;
+        switch(lastPieceType)
+        {
+            case PAWN : //Pawn
+                toDiff = turnSwitch*(lastToSquare - kingSquare);
+                if(toDiff == 15 || toDiff == 17)
                 {
-                    fromDiff = -(kingSquare + lastFromSquare);
-                    if((fromDiff%15) == 0)
-                    {
-                        directCheck = revealedAttackOnKing(abs(fromDiff)/(fromDiff/15));
-                    }
-                    else if((fromDiff%16) == 0)
-                    {
-                        directCheck = revealedAttackOnKing(abs(fromDiff)/(fromDiff/16));
-                    }
-                    else if((fromDiff%17) == 0)
-                    {
-                        directCheck = revealedAttackOnKing(abs(fromDiff)/(fromDiff/17));
-                    }
-                    else if(abs(fromDiff) < 7)
-                    {
-                        directCheck = revealedAttackOnKing(abs(fromDiff)/(fromDiff));
-                    }
+                    attackingSquare = lastToSquare;
+                    attackDirection = -turnSwitch*toDiff;
+                    directCheck = true;
                 }
-                toDiff = lastToSquare + turnSwitch*16 - kingSquare; //Examine toSquare of captured pawn
-                if((toDiff%15) == 0)
+                if(lastFromSquare < 0)
                 {
-                    revealedCheck = revealedAttackOnKing(abs(toDiff)/(toDiff/15));
+                    if(! directCheck)
+                    {
+                        fromDiff = -(kingSquare + lastFromSquare);
+                        if((fromDiff%15) == 0)
+                        {
+                            directCheck = revealedAttackOnKing(abs(fromDiff)/(fromDiff/15));
+                        }
+                        else if((fromDiff%16) == 0)
+                        {
+                            directCheck = revealedAttackOnKing(abs(fromDiff)/(fromDiff/16));
+                        }
+                        else if((fromDiff%17) == 0)
+                        {
+                            directCheck = revealedAttackOnKing(abs(fromDiff)/(fromDiff/17));
+                        }
+                        else if(abs(fromDiff) < 7)
+                        {
+                            directCheck = revealedAttackOnKing(abs(fromDiff)/(fromDiff));
+                        }
+                    }
+                    toDiff = lastToSquare + turnSwitch*16 - kingSquare; //Examine toSquare of captured pawn
+                    if((toDiff%15) == 0)
+                    {
+                        revealedCheck = revealedAttackOnKing(abs(toDiff)/(toDiff/15));
+                    }
+                    else if((toDiff%17) == 0)
+                    {
+                        revealedCheck = revealedAttackOnKing(abs(toDiff)/(toDiff/17));
+                    }
+                    fromDiff = 18;
                 }
-                else if((toDiff%17) == 0)
+                break;
+            case KNIGHT : //Knight
+                toDiff = abs(lastToSquare - kingSquare);
+                if(toDiff == 14 || toDiff == 18 || toDiff == 31 || toDiff == 33)
                 {
-                    revealedCheck = revealedAttackOnKing(abs(toDiff)/(toDiff/17));
+                    attackingSquare = lastToSquare;
+                    attackDirection = toDiff;
+                    directCheck = true;
                 }
-                fromDiff = 18;
-            }
-            break;
-        case KNIGHT : //Knight
-            toDiff = abs(lastToSquare - kingSquare);
-            if(toDiff == 14 || toDiff == 18 || toDiff == 31 || toDiff == 33)
-            {
-                attackingSquare = lastToSquare;
-                attackDirection = toDiff;
-                directCheck = true;
-            }
-            break;
-        case BISHOP : //Bishop
-            toDiff = kingSquare - lastToSquare;
-            if(toDiff%15 == 0) //Enemy bishop may be attacking along left diagonal
-            {
-                directCheck = attackOnKing(abs(toDiff)/(toDiff/15)); 
-            }
-            else if(toDiff%17 == 0) //Enemy bishop may be attacking along right diagonal
-            {
-                directCheck = attackOnKing(abs(toDiff)/(toDiff/17));
-            }
-            break;
-        case ROOK : //Rook
-            toDiff = kingSquare - lastToSquare;
-            if(toDiff%16 == 0) //Enemy rook may be attacking along file
-            {
-                directCheck = attackOnKing(abs(toDiff)/(toDiff/16));
-            }
-            else if(abs(toDiff) < 8) //Enemy rook may be attacking along rank
-            {
-                directCheck = attackOnKing(abs(toDiff)/toDiff);
-            }
-            if(whiteTurn) //Black rook moved
-            {
-                if((lastFromSquare == 112) & ((1&castlingRights) == 1)) positionalInformation[2] -= 1;
-                else if((lastFromSquare == 119) & ((2&castlingRights) == 2)) positionalInformation[2] -= 2;
-            }
-            else //White rook moved
-            {
-                if((lastFromSquare == 0) & ((4&castlingRights) == 4)) positionalInformation[2] -= 4;
-                else if((lastFromSquare == 7) & ((8&castlingRights) == 8)) positionalInformation[2] -= 8;
-            }
-            break;
-        case QUEEN : //Queen
-            toDiff = kingSquare - lastToSquare;
-            if(toDiff%15 == 0) //Enemy queen may be attacking along left diagonal
-            {
-                directCheck = attackOnKing(abs(toDiff)/(toDiff/15));
-            }
-            else if(toDiff%16 == 0) //Enemy queen may be attacking along file
-            {
-                directCheck = attackOnKing(abs(toDiff)/(toDiff/16));
-            }
-            else if(toDiff%17 == 0) //Enemy queen may be attacking along right diagonal
-            {
-                directCheck = attackOnKing(abs(toDiff)/(toDiff/17));
-            }
-            else if(abs(toDiff) < 8) //Enemy queen may be attacking along rank
-            {
-                directCheck = attackOnKing(abs(toDiff)/toDiff);
-            }
-            if(lastFromSquare < 0) //Pawn promotion
-            {
-                fromDiff = -lastFromSquare - kingSquare;
-            }
-            break;
-        case KING : //King
-            toDiff = kingSquare - lastToSquare;
-            if(whiteTurn) //Black king moved
-            {
-                if((2&castlingRights) == 2) positionalInformation[CASTLING] -= 2;
-                if((1&castlingRights) == 1) positionalInformation[CASTLING] -= 1;
-            }
-            else 
-            {
-                if((8&castlingRights) == 8) positionalInformation[CASTLING] -= 8;
-                if((4&castlingRights) == 4) positionalInformation[CASTLING] -= 4;
-            }
-            if(lastFromSquare < 0) //Castle
-            {
-                fromDiff = (lastToSquare - lastFromSquare)/2 - kingSquare;
-                toDiff = lastToSquare + 16; //Rig toDiff
-            }
-            break;
+                break;
+            case BISHOP : //Bishop
+                toDiff = kingSquare - lastToSquare;
+                if(toDiff%15 == 0) //Enemy bishop may be attacking along left diagonal
+                {
+                    directCheck = attackOnKing(abs(toDiff)/(toDiff/15)); 
+                }
+                else if(toDiff%17 == 0) //Enemy bishop may be attacking along right diagonal
+                {
+                    directCheck = attackOnKing(abs(toDiff)/(toDiff/17));
+                }
+                break;
+            case ROOK : //Rook
+                toDiff = kingSquare - lastToSquare;
+                if(toDiff%16 == 0) //Enemy rook may be attacking along file
+                {
+                    directCheck = attackOnKing(abs(toDiff)/(toDiff/16));
+                }
+                else if(abs(toDiff) < 8) //Enemy rook may be attacking along rank
+                {
+                    directCheck = attackOnKing(abs(toDiff)/toDiff);
+                }
+                if(whiteTurn) //Black rook moved
+                {
+                    if((lastFromSquare == 112) & ((1&castlingRights) == 1)) positionalInformation[2] -= 1;
+                    else if((lastFromSquare == 119) & ((2&castlingRights) == 2)) positionalInformation[2] -= 2;
+                }
+                else //White rook moved
+                {
+                    if((lastFromSquare == 0) & ((4&castlingRights) == 4)) positionalInformation[2] -= 4;
+                    else if((lastFromSquare == 7) & ((8&castlingRights) == 8)) positionalInformation[2] -= 8;
+                }
+                break;
+            case QUEEN : //Queen
+                toDiff = kingSquare - lastToSquare;
+                if(toDiff%15 == 0) //Enemy queen may be attacking along left diagonal
+                {
+                    directCheck = attackOnKing(abs(toDiff)/(toDiff/15));
+                }
+                else if(toDiff%16 == 0) //Enemy queen may be attacking along file
+                {
+                    directCheck = attackOnKing(abs(toDiff)/(toDiff/16));
+                }
+                else if(toDiff%17 == 0) //Enemy queen may be attacking along right diagonal
+                {
+                    directCheck = attackOnKing(abs(toDiff)/(toDiff/17));
+                }
+                else if(abs(toDiff) < 8) //Enemy queen may be attacking along rank
+                {
+                    directCheck = attackOnKing(abs(toDiff)/toDiff);
+                }
+                if(lastFromSquare < 0) //Pawn promotion
+                {
+                    fromDiff = -lastFromSquare - kingSquare;
+                }
+                break;
+            case KING : //King
+                toDiff = kingSquare - lastToSquare;
+                if(whiteTurn) //Black king moved
+                {
+                    if((2&castlingRights) == 2) positionalInformation[CASTLING] -= 2;
+                    if((1&castlingRights) == 1) positionalInformation[CASTLING] -= 1;
+                }
+                else 
+                {
+                    if((8&castlingRights) == 8) positionalInformation[CASTLING] -= 8;
+                    if((4&castlingRights) == 4) positionalInformation[CASTLING] -= 4;
+                }
+                if(lastFromSquare < 0) //Castle
+                {
+                    fromDiff = (lastToSquare - lastFromSquare)/2 - kingSquare;
+                    toDiff = lastToSquare + 16; //Rig toDiff
+                }
+                break;
+        }
+        //Search for revealed check:
+        if(fromDiff%15 == 0) //Potential attack from along left diagonal
+        {
+            if(toDiff%15 != 0) revealedCheck = revealedAttackOnKing(abs(fromDiff)/(fromDiff/15));
+        }
+        else if(fromDiff%16 == 0) //Potential attack along file
+        {
+            if(toDiff%16 != 0) revealedCheck = revealedAttackOnKing(abs(fromDiff)/(fromDiff/16));
+        }
+        else if(fromDiff%17 == 0) //Potential attack along right diagonal
+        {
+            if(toDiff%17 != 0) revealedCheck = revealedAttackOnKing(abs(fromDiff)/(fromDiff/17));
+        }
+        else if(abs(fromDiff) < 7) //Potential attack along rank
+        {
+            if(abs(toDiff) > 7) revealedCheck = revealedAttackOnKing(abs(fromDiff)/fromDiff);
+        }
     }
-    //Search for revealed check:
-    if(fromDiff%15 == 0) //Potential attack from along left diagonal
-    {
-        if(toDiff%15 != 0) revealedCheck = revealedAttackOnKing(abs(fromDiff)/(fromDiff/15));
-    }
-    else if(fromDiff%16 == 0) //Potential attack along file
-    {
-        if(toDiff%16 != 0) revealedCheck = revealedAttackOnKing(abs(fromDiff)/(fromDiff/16));
-    }
-    else if(fromDiff%17 == 0) //Potential attack along right diagonal
-    {
-        if(toDiff%17 != 0) revealedCheck = revealedAttackOnKing(abs(fromDiff)/(fromDiff/17));
-    }
-    else if(abs(fromDiff) < 7) //Potential attack along rank
-    {
-        if(abs(toDiff) > 7) revealedCheck = revealedAttackOnKing(abs(fromDiff)/fromDiff);
-    }       
-}
     //Initialise piece status array
     for(i = 0; i < 16; i++)
     {
@@ -348,17 +353,17 @@ if(lastToSquare != NULL_MOVE_FLAG)
     {
         if(lastPieceType == PAWN && abs(lastToSquare - lastFromSquare) == 32) 
         {
-            moveGenerator::enPassant();
+            this->enPassant();
         }
         if(whiteTurn)
         {
-            if((8&castlingRights) == 8) moveGenerator::whiteCastling(1, 6, 7);
-            if((4&castlingRights) == 4) moveGenerator::whiteCastling(-1, 2, 0);
+            if((8&castlingRights) == 8) this->whiteCastling(1, 6, 7);
+            if((4&castlingRights) == 4) this->whiteCastling(-1, 2, 0);
         }
         else
         {
-            if((2&castlingRights) == 2) moveGenerator::blackCastling(1, 118, 119);
-            if((1&castlingRights) == 1) moveGenerator::blackCastling(-1, 114, 112);
+            if((2&castlingRights) == 2) this->blackCastling(1, 118, 119);
+            if((1&castlingRights) == 1) this->blackCastling(-1, 114, 112);
         }
         //Set check parameter
         positionalInformation[IN_CHECK] = 0;
@@ -377,7 +382,7 @@ if(lastToSquare != NULL_MOVE_FLAG)
         {
             if(lastPieceType == PAWN && abs(lastToSquare - lastFromSquare) == 32) 
             {
-                moveGenerator::enPassant();
+                this->enPassant();
             }
         }
         //Set check parameter
@@ -389,7 +394,7 @@ if(lastToSquare != NULL_MOVE_FLAG)
 
 //Move generation managers
 
-void moveGenerator::whiteCastling(int direction, int toSquare, int rookSquare)
+void MoveGenerator::whiteCastling(int direction, int toSquare, int rookSquare)
 {
     int boardSquare, i, searchSquare, attackDirection, squareValue, pieceType;
     boardSquare = kingSquare + direction;
@@ -470,7 +475,7 @@ void moveGenerator::whiteCastling(int direction, int toSquare, int rookSquare)
     }
 }
 
-void moveGenerator::blackCastling(int direction, int toSquare, int rookSquare)
+void MoveGenerator::blackCastling(int direction, int toSquare, int rookSquare)
 {
     int boardSquare, attackDirection, searchSquare, squareValue, pieceType, i;
     boardSquare = kingSquare + direction;
@@ -553,7 +558,7 @@ void moveGenerator::blackCastling(int direction, int toSquare, int rookSquare)
     }
 }
 
-bool moveGenerator::enPassantPin(int firstPawnSquare, int secondPawnSquare)
+bool MoveGenerator::enPassantPin(int firstPawnSquare, int secondPawnSquare)
 {
     int searchDirection, boardSquare, squareValue, pieceType;
     
@@ -580,7 +585,7 @@ bool moveGenerator::enPassantPin(int firstPawnSquare, int secondPawnSquare)
     }
 }
 
-void moveGenerator::enPassant(void)
+void MoveGenerator::enPassant(void)
 {
     int squareValue, pieceType, status;
     if((136&(lastToSquare + 1)) == 0) //Check for en passant capture
@@ -650,7 +655,7 @@ void moveGenerator::enPassant(void)
     }
 }
 
-void moveGenerator::shuffleMoves(int * previousRootNodes, int * refutationTable, int * pieceValues, int depth)
+void MoveGenerator::shuffleMoves(int * previousRootNodes, int * refutationTable, int * pieceValues, int depth)
 {
     int fromSquare, toSquare, shuffleRank;
     shuffleRank = 0;
@@ -805,7 +810,7 @@ void moveGenerator::shuffleMoves(int * previousRootNodes, int * refutationTable,
 #endif
 }
 
-void moveGenerator::getAllMoves(void)
+void MoveGenerator::getAllMoves(void)
 {
     //Looping variables
     int status, pieceType, pieceStatusIndex;
@@ -813,7 +818,7 @@ void moveGenerator::getAllMoves(void)
     {
         for(pieceStatusIndex = 0; pieceStatusIndex < 16; pieceStatusIndex++)
         {
-            currentPiece = moveGenerator::pieceOrder[pieceStatusIndex];
+            currentPiece = this->pieceOrder[pieceStatusIndex];
             pieceType = positionalInformation[currentPiece + 64];
             switch(pieceType)
             {
@@ -893,7 +898,7 @@ void moveGenerator::getAllMoves(void)
     {
         for(pieceStatusIndex = 0; pieceStatusIndex < 16; pieceStatusIndex++)
         {
-            currentPiece = moveGenerator::pieceOrder[pieceStatusIndex];
+            currentPiece = this->pieceOrder[pieceStatusIndex];
             pieceType = positionalInformation[currentPiece + 64];
             switch(pieceType)
             {
@@ -973,7 +978,7 @@ void moveGenerator::getAllMoves(void)
     allMoves[arraySize] = -2;
 }
 
-void moveGenerator::getCheckMoves(void)
+void MoveGenerator::getCheckMoves(void)
 {
     int terminalSquare, pieceType, pieceSquare, pieceStatusIndex, boardSquare, square;
 
@@ -1086,7 +1091,7 @@ void moveGenerator::getCheckMoves(void)
 
 //Move generation functions
 
-void moveGenerator::whitePawnMove(int pieceLocation)
+void MoveGenerator::whitePawnMove(int pieceLocation)
 {
     int nextMove;
     //Capturing moves
@@ -1144,7 +1149,7 @@ void moveGenerator::whitePawnMove(int pieceLocation)
     }
 }
 
-void moveGenerator::blackPawnMove(int pieceLocation)
+void MoveGenerator::blackPawnMove(int pieceLocation)
 {
     int nextMove;
     //Capturing moves
@@ -1202,7 +1207,7 @@ void moveGenerator::blackPawnMove(int pieceLocation)
     }   
 }
 
-void moveGenerator::whitePinnedPawnCapture(int pieceLocation, int nextMove)
+void MoveGenerator::whitePinnedPawnCapture(int pieceLocation, int nextMove)
 {
     if((136&nextMove) == 0) //Move on board
     {
@@ -1224,7 +1229,7 @@ void moveGenerator::whitePinnedPawnCapture(int pieceLocation, int nextMove)
     }
 }
 
-void moveGenerator::blackPinnedPawnCapture(int pieceLocation, int nextMove)
+void MoveGenerator::blackPinnedPawnCapture(int pieceLocation, int nextMove)
 {
     if((136&nextMove) == 0) //Move on board
     {
@@ -1246,7 +1251,7 @@ void moveGenerator::blackPinnedPawnCapture(int pieceLocation, int nextMove)
     }
 }
 
-void moveGenerator::whitePawnAdvance(int pieceLocation)
+void MoveGenerator::whitePawnAdvance(int pieceLocation)
 {
     int nextMove = pieceLocation + 16;
     if((nextMove&136) == 0) //Move on board
@@ -1279,7 +1284,7 @@ void moveGenerator::whitePawnAdvance(int pieceLocation)
     }
 }
 
-void moveGenerator::blackPawnAdvance(int pieceLocation)
+void MoveGenerator::blackPawnAdvance(int pieceLocation)
 {
     int nextMove = pieceLocation - 16;
     if((nextMove&136) == 0) //Move on board
@@ -1312,7 +1317,7 @@ void moveGenerator::blackPawnAdvance(int pieceLocation)
     }
 }
 
-void moveGenerator::whiteKnightMove(int pieceLocation)
+void MoveGenerator::whiteKnightMove(int pieceLocation)
 {
     int nextMove;
     for(int i = 0; i < 8; i++)
@@ -1330,7 +1335,7 @@ void moveGenerator::whiteKnightMove(int pieceLocation)
     }
 }
 
-void moveGenerator::blackKnightMove(int pieceLocation)
+void MoveGenerator::blackKnightMove(int pieceLocation)
 {
     int nextMove;
     for(int i = 0; i < 8; i++)
@@ -1348,7 +1353,7 @@ void moveGenerator::blackKnightMove(int pieceLocation)
     }
 }
 
-void moveGenerator::whiteBishopMove(int pieceLocation)
+void MoveGenerator::whiteBishopMove(int pieceLocation)
 {
     int nextDirection, boardSquare;
     for(int i = 0; i < 4; i++)
@@ -1373,7 +1378,7 @@ void moveGenerator::whiteBishopMove(int pieceLocation)
     }
 }
 
-void moveGenerator::whiteRookMove(int pieceLocation)
+void MoveGenerator::whiteRookMove(int pieceLocation)
 {
     int nextDirection, boardSquare;
     for(int i = 0; i < 4; i++)
@@ -1398,7 +1403,7 @@ void moveGenerator::whiteRookMove(int pieceLocation)
     }
 }
 
-void moveGenerator::whiteQueenMove(int pieceLocation)
+void MoveGenerator::whiteQueenMove(int pieceLocation)
 {
     int nextDirection, boardSquare;
     for(int i = 0; i < 8; i++)
@@ -1423,7 +1428,7 @@ void moveGenerator::whiteQueenMove(int pieceLocation)
     }
 }
 
-void moveGenerator::blackBishopMove(int pieceLocation)
+void MoveGenerator::blackBishopMove(int pieceLocation)
 {
     int nextDirection, boardSquare;
     for(int i = 0; i < 4; i++)
@@ -1448,7 +1453,7 @@ void moveGenerator::blackBishopMove(int pieceLocation)
     }
 }
 
-void moveGenerator::blackRookMove(int pieceLocation)
+void MoveGenerator::blackRookMove(int pieceLocation)
 {
     int nextDirection, boardSquare;
     for(int i = 0; i < 4; i++)
@@ -1473,7 +1478,7 @@ void moveGenerator::blackRookMove(int pieceLocation)
     }
 }
 
-void moveGenerator::blackQueenMove(int pieceLocation)
+void MoveGenerator::blackQueenMove(int pieceLocation)
 {
     int nextDirection, boardSquare;
     for(int i = 0; i < 8; i++)
@@ -1498,7 +1503,7 @@ void moveGenerator::blackQueenMove(int pieceLocation)
     }
 }
 
-void moveGenerator::whiteKingMove(void)
+void MoveGenerator::whiteKingMove(void)
 {
     int check = false;
     int boardSquare, searchSquare, pieceType, i, j;
@@ -1604,7 +1609,7 @@ void moveGenerator::whiteKingMove(void)
     }
 }
 
-void moveGenerator::blackKingMove(void)
+void MoveGenerator::blackKingMove(void)
 {
     int check = false;
     int boardSquare, searchSquare, pieceType, i, j;
@@ -1709,7 +1714,7 @@ void moveGenerator::blackKingMove(void)
     }
 }
 
-void moveGenerator::whiteSlidingMove(int pieceLocation, int pieceStatus)
+void MoveGenerator::whiteSlidingMove(int pieceLocation, int pieceStatus)
 {
     int boardSquare;
     for(int i = 0; i < 2; i++)
@@ -1734,7 +1739,7 @@ void moveGenerator::whiteSlidingMove(int pieceLocation, int pieceStatus)
     }
 }
 
-void moveGenerator::blackSlidingMove(int pieceLocation, int pieceStatus)
+void MoveGenerator::blackSlidingMove(int pieceLocation, int pieceStatus)
 {
     int boardSquare;
     for(int i = 0; i < 2; i++)
@@ -1759,7 +1764,7 @@ void moveGenerator::blackSlidingMove(int pieceLocation, int pieceStatus)
     }
 }
 
-void moveGenerator::displayPosition(void)
+void MoveGenerator::displayPosition(void)
 {
     cout << "\n\n";
     for(int j = 7; j >= 0; j--)
@@ -1767,10 +1772,10 @@ void moveGenerator::displayPosition(void)
         cout << "|";
         for(int k = 0; k < 8; k++)
         {
-            int squareValue = moveGenerator::position[j*16 + k];
+            int squareValue = this->position[j*16 + k];
             if(squareValue != 0)
             {
-                int pieceType = moveGenerator::positionalInformation[abs(moveGenerator::position[j*16 + k]) + 64];
+                int pieceType = this->positionalInformation[abs(this->position[j*16 + k]) + 64];
                 if(squareValue > 0)
                 {
                     cout << WHITE_PIECE_NAMES[pieceType];
@@ -1791,7 +1796,7 @@ void moveGenerator::displayPosition(void)
     cout << "\n";
 }
 
-void moveGenerator::displayPositionalInformation(void)
+void MoveGenerator::displayPositionalInformation(void)
 {
     for(int i = 7; i >= 0; i--)
     {
@@ -1822,7 +1827,7 @@ void moveGenerator::displayPositionalInformation(void)
     cout << "\n";
 }
 
-//int moveGenerator::SEE(int fromSquare, int captureSquare)
+//int MoveGenerator::SEE(int fromSquare, int captureSquare)
 //{
 //  int searchSquare, capturingPieceType, capturedPieceType, currentPieceIndex, pieceType, evaluation, numWhiteKnights, numBlackKnights, i, j;
 //  int lastPieceType;

@@ -1,6 +1,6 @@
 CXX = g++
 CXXFLAGS = -Wall -g
-BIN=./bin/
+BIN=./
 SOURCE=./src/
 
 ludicrous: main.o ChessGame.o \

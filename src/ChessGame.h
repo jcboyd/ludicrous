@@ -1,24 +1,19 @@
-// #include "MoveGenerator.h"
-// #include "Search.h"
-#include "IterativeDeepener.h"
-#include <iostream>
 #include <string>
 
-using namespace std;
 
-class chessGame
+class ChessGame
 {
 public:
-    chessGame();
-    ~chessGame(void);
+    ChessGame();
+    ~ChessGame(void);
     void initialiseBoard(void);
     int* getBoard(void);
     int* getPositionalInformation(void);
     int* getPieceValues(void);
-    void setPosition(string fen, int lastFromSquare, int lastToSquare);
+    void setPosition(std::string fen, int lastFromSquare, int lastToSquare);
     bool isSpecialMove(int fromSquare, int toSquare);
     void makeMove(int toSquare, int fromSquare);
-    int translateSquare(string userMove, bool isToSquare);
+    int translateSquare(std::string userMove, bool isToSquare);
     bool findMove(int fromSquare, int toSquare);
     void displayPosition(void);
     void displayFlippedPosition(void);

@@ -1,35 +1,40 @@
+#include <iostream>
+#include <string>
 #include "IterativeDeepener.h"
+#include "Search.h"
+#include "Globals.h"
 
-iterativeDeepener::iterativeDeepener(int* position, int* positionalInformation, int* pieceValues)
+using namespace std;
+
+
+IterativeDeepener::IterativeDeepener(int* position, int* positionalInformation, int* pieceValues)
 {
-    iterativeDeepener::position = position;
-    iterativeDeepener::positionalInformation = positionalInformation;
-    iterativeDeepener::pieceValues = pieceValues;
-    iterativeDeepener::baseEvaluation = positionalInformation[EVALUATION];
-    iterativeDeepener::lastFromSquare = positionalInformation[LAST_FROM_SQUARE];
-    iterativeDeepener::lastToSquare = positionalInformation[LAST_TO_SQUARE];
-    for(int i = 0; i < 1024; i++) iterativeDeepener::rootNodes[i] = 0;
+    this->position = position;
+    this->positionalInformation = positionalInformation;
+    this->pieceValues = pieceValues;
+    this->baseEvaluation = positionalInformation[EVALUATION];
+    this->lastFromSquare = positionalInformation[LAST_FROM_SQUARE];
+    this->lastToSquare = positionalInformation[LAST_TO_SQUARE];
+    for(int i = 0; i < 1024; i++) this->rootNodes[i] = 0;
     max_time = 3;
 }
 
-iterativeDeepener::~iterativeDeepener(void) {}
+IterativeDeepener::~IterativeDeepener(void) {}
 
-void iterativeDeepener::iterativeDeepening(double time_limit)
+void IterativeDeepener::iterativeDeepening(double time_limit)
 {
     clock_t start_time = clock();
     clock_t end_time;
     clock_t clock_ticks_taken;
     double time_in_seconds;
     int eval;
-
-
     
     for(int i = 1; i <= maximumDepth; i++)
     {
         positionalInformation[LAST_FROM_SQUARE] = lastFromSquare;
         positionalInformation[LAST_TO_SQUARE] = lastToSquare;
-        search::search newSearch = search::search(position, positionalInformation, pieceValues, i, baseEvaluation, positionalInformation[ENDGAME]);
-        newSearch.setPrincipalVariation(iterativeDeepener::principalVariation);
+        Search newSearch = Search(position, positionalInformation, pieceValues, i, baseEvaluation, positionalInformation[ENDGAME]);
+        newSearch.setPrincipalVariation(this->principalVariation);
         newSearch.setPreviousRootNodes(rootNodes);
         
         eval = newSearch.initiateSearch();
@@ -39,27 +44,27 @@ void iterativeDeepener::iterativeDeepening(double time_limit)
         
         recordPrincipalVariation(newSearch.getPVTable(), i);
         
-        iterativeDeepener::principalFromSquare = iterativeDeepener::principalVariation[0];
-        iterativeDeepener::principalToSquare = iterativeDeepener::principalVariation[1];
+        this->principalFromSquare = this->principalVariation[0];
+        this->principalToSquare = this->principalVariation[1];
         if(displayAnalysis)
         {
-            cout << "t" << time_in_seconds << " : ";
+            cout << "\tt" << time_in_seconds << " : ";
             cout << "d" << i << " : " << eval/100.0 << " : ";
-            iterativeDeepener::displayPrincipalVariation(i);
+            this->displayPrincipalVariation(i);
         }
-        newSearch.copyRootNodes(iterativeDeepener::rootNodes);
-        iterativeDeepener::sortRootNodes();
+        newSearch.copyRootNodes(this->rootNodes);
+        this->sortRootNodes();
         
         if(i == maximumDepth and time_in_seconds < max_time) maximumDepth++;
     }
 }
 
-void iterativeDeepener::setMaxTime(double maximumTime)
+void IterativeDeepener::setMaxTime(double maximumTime)
 {
     max_time = maximumTime;
 }
 
-void iterativeDeepener::sortRootNodes(void)
+void IterativeDeepener::sortRootNodes(void)
 {
     int turnSwitch, nodeFrom, nodeTo, killerFrom, killerTo, evaluation, numNodes, nodesSorted, bestIndex, bestEval, i;
     turnSwitch = -1 + 2 * positionalInformation[WHITE_TURN];
@@ -103,27 +108,27 @@ void iterativeDeepener::sortRootNodes(void)
     }
 }
 
-void iterativeDeepener::setDisplayAnalysis(bool displayAnalysisSwitch)
+void IterativeDeepener::setDisplayAnalysis(bool displayAnalysisSwitch)
 {
-    iterativeDeepener::displayAnalysis = displayAnalysisSwitch;
+    this->displayAnalysis = displayAnalysisSwitch;
 }
 
-void iterativeDeepener::recordPrincipalVariation(int* PVTable, int length)
+void IterativeDeepener::recordPrincipalVariation(int* PVTable, int length)
 {
     //Construct principal variation
     for(int i = 0; i < 512; i++)
     {
-        iterativeDeepener::principalVariation[i] = 0;
+        this->principalVariation[i] = 0;
     }
     
     for(int i = 0; i < length; i++)
     {
-        iterativeDeepener::principalVariation[2*i] = PVTable[(length - 1)*34 - 2*i];
-        iterativeDeepener::principalVariation[2*i+1] = PVTable[(length - 1)*34 - 2*i + 1];
+        this->principalVariation[2*i] = PVTable[(length - 1)*34 - 2*i];
+        this->principalVariation[2*i+1] = PVTable[(length - 1)*34 - 2*i + 1];
     }
 }
 
-void iterativeDeepener::displayPrincipalVariation(int length)
+void IterativeDeepener::displayPrincipalVariation(int length)
 {
     for(int i = 0; i < 2*length; i += 2)
     {
@@ -170,7 +175,7 @@ void iterativeDeepener::displayPrincipalVariation(int length)
     cout << "\n";
 }
 
-void iterativeDeepener::displayPosition(void)
+void IterativeDeepener::displayPosition(void)
 {
     cout << "\n";
     for(int j = 7; j >= 0; j--)
@@ -178,10 +183,10 @@ void iterativeDeepener::displayPosition(void)
         cout << "|";
         for(int k = 0; k < 8; k++)
         {
-            int squareValue = iterativeDeepener::position[j*16 + k];
+            int squareValue = this->position[j*16 + k];
             if(squareValue != 0)
             {
-                int pieceType = iterativeDeepener::positionalInformation[abs(iterativeDeepener::position[j*16 + k]) + 64];
+                int pieceType = this->positionalInformation[abs(this->position[j*16 + k]) + 64];
                 if(squareValue > 0)
                 {
                     cout << WHITE_PIECE_NAMES[pieceType];
@@ -202,23 +207,23 @@ void iterativeDeepener::displayPosition(void)
     cout << "\n";
 }
 
-void iterativeDeepener::reset(int* position, int* positionalInformation, int* pieceValues, int maximumDepth)
+void IterativeDeepener::reset(int* position, int* positionalInformation, int* pieceValues, int maximumDepth)
 {
-    iterativeDeepener::position = position;
-    iterativeDeepener::positionalInformation = positionalInformation;
-    iterativeDeepener::pieceValues = pieceValues;
-    iterativeDeepener::maximumDepth = maximumDepth;
-    iterativeDeepener::lastFromSquare = positionalInformation[LAST_FROM_SQUARE];
-    iterativeDeepener::lastToSquare = positionalInformation[LAST_TO_SQUARE];
-    iterativeDeepener::baseEvaluation = positionalInformation[EVALUATION];
+    this->position = position;
+    this->positionalInformation = positionalInformation;
+    this->pieceValues = pieceValues;
+    this->maximumDepth = maximumDepth;
+    this->lastFromSquare = positionalInformation[LAST_FROM_SQUARE];
+    this->lastToSquare = positionalInformation[LAST_TO_SQUARE];
+    this->baseEvaluation = positionalInformation[EVALUATION];
 }
 
-int iterativeDeepener::getPrincipalFromSquare(void)
+int IterativeDeepener::getPrincipalFromSquare(void)
 {
-    return iterativeDeepener::principalFromSquare;
+    return this->principalFromSquare;
 }
 
-int iterativeDeepener::getPrincipalToSquare(void)
+int IterativeDeepener::getPrincipalToSquare(void)
 {
-    return iterativeDeepener::principalToSquare;
+    return this->principalToSquare;
 }

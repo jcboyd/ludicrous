@@ -1,16 +1,23 @@
-
+#include <iostream>
 #include "ChessGame.h"
+#include "IterativeDeepener.h"
+#include "MoveGenerator.h"
+#include "Globals.h"
 
-chessGame::chessGame()
+
+using namespace std;
+
+
+ChessGame::ChessGame()
 {
-    chessGame::setPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 32, 32);
+    this->setPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 32, 32);
 }
 
-chessGame::~chessGame(void) 
+ChessGame::~ChessGame(void) 
 {
 }
 
-void chessGame::setPosition(string fen, int lastFromSquare, int lastToSquare)
+void ChessGame::setPosition(string fen, int lastFromSquare, int lastToSquare)
 {
     int squareCount = 0, characterIndex = 0, whitePieceIndex = 0, blackPieceIndex = 0, squareIndex, emptySquares, castlingRights;
     string character;
@@ -160,7 +167,7 @@ void chessGame::setPosition(string fen, int lastFromSquare, int lastToSquare)
             
             squareCount += emptySquares;
             
-            for(int i = 0; i < emptySquares; i++) chessGame::chessBoard[squareIndex + i] = 0;
+            for(int i = 0; i < emptySquares; i++) this->chessBoard[squareIndex + i] = 0;
         }
     }
     
@@ -192,18 +199,18 @@ void chessGame::setPosition(string fen, int lastFromSquare, int lastToSquare)
     }
     
     //Set casting parameter:
-    chessGame::positionalInformation[CASTLING] = castlingRights;
+    this->positionalInformation[CASTLING] = castlingRights;
     
     characterIndex++;
     
-    chessGame::positionalInformation[LAST_FROM_SQUARE] = lastFromSquare;
-    chessGame::positionalInformation[LAST_TO_SQUARE] = lastToSquare;
+    this->positionalInformation[LAST_FROM_SQUARE] = lastFromSquare;
+    this->positionalInformation[LAST_TO_SQUARE] = lastToSquare;
     //Ignore the rest of the string for now
     
     if(queensOff()) positionalInformation[ENDGAME] = 1;
 }
 
-int chessGame::translateSquare(string userMove, bool isToSquare)
+int ChessGame::translateSquare(string userMove, bool isToSquare)
 {
     string files = "abcdefgh", ranks = "12345678";
     
@@ -234,12 +241,12 @@ int chessGame::translateSquare(string userMove, bool isToSquare)
     return 16*rankNumber + fileNumber;
 }
 
-bool chessGame::findMove(int fromSquare, int toSquare)
+bool ChessGame::findMove(int fromSquare, int toSquare)
 {       
     bool foundMove = false;
     int arraySize, i, allMoves[256];
     
-    moveGenerator newMoveGenerator = moveGenerator(chessBoard, positionalInformation, allMoves);
+    MoveGenerator newMoveGenerator(chessBoard, positionalInformation, allMoves);
     newMoveGenerator.getLegalMoves();
     arraySize = newMoveGenerator.getArraySize();
     
@@ -253,7 +260,7 @@ bool chessGame::findMove(int fromSquare, int toSquare)
     return foundMove;
 }
 
-bool chessGame::isSpecialMove(int fromSquare, int toSquare)
+bool ChessGame::isSpecialMove(int fromSquare, int toSquare)
 {
     int pieceType;
     pieceType = positionalInformation[abs(chessBoard[fromSquare]) + 64];
@@ -273,7 +280,7 @@ bool chessGame::isSpecialMove(int fromSquare, int toSquare)
     return false;
 }
 
-bool chessGame::queensOff(void)
+bool ChessGame::queensOff(void)
 {
     bool blackQueenOff = false, whiteQueenOff = false;
     
@@ -290,7 +297,7 @@ bool chessGame::queensOff(void)
     return false;
 }
 
-void chessGame::makeMove(int fromSquare, int toSquare)
+void ChessGame::makeMove(int fromSquare, int toSquare)
 {
     int pieceIndex = 0, pieceType = 0, capture = 0, positionalEvaluation = 0;
     const int * pieceSquareTables[6];
@@ -472,33 +479,33 @@ void chessGame::makeMove(int fromSquare, int toSquare)
     if(queensOff()) positionalInformation[ENDGAME] = 1;
 }
 
-int* chessGame::getBoard(void)
+int* ChessGame::getBoard(void)
 {
-    return chessGame::chessBoard;
+    return this->chessBoard;
 }
 
-int* chessGame::getPositionalInformation(void)
+int* ChessGame::getPositionalInformation(void)
 {
     return positionalInformation;
 }
 
-int* chessGame::getPieceValues(void)
+int* ChessGame::getPieceValues(void)
 {
-    return chessGame::pieceValues;
+    return this->pieceValues;
 }
 
-void chessGame::displayPosition(void)
+void ChessGame::displayPosition(void)
 {
-    cout << "+ - + - + - + - + - + - + - + - +\n";
+    cout << "\t+ - + - + - + - + - + - + - + - +\n";
     for(int j = 7; j >= 0; j--)
     {
-        cout << "| ";
+        cout << "\t| ";
         for(int k = 0; k < 8; k++)
         {
-            int squareValue = chessGame::chessBoard[j*16 + k];
+            int squareValue = this->chessBoard[j*16 + k];
             if(squareValue != 0)
             {
-                int pieceType = chessGame::positionalInformation[abs(chessGame::chessBoard[j*16 + k]) + 64];
+                int pieceType = this->positionalInformation[abs(this->chessBoard[j*16 + k]) + 64];
                 if(squareValue > 0)
                 {
                     cout << WHITE_PIECE_NAMES[pieceType];
@@ -514,22 +521,22 @@ void chessGame::displayPosition(void)
                 cout << "  | ";
             }           
         }       
-        cout << "\n+ - + - + - + - + - + - + - + - +\n";
+        cout << "\n\t+ - + - + - + - + - + - + - + - +\n";
     }
 }
 
-void chessGame::displayFlippedPosition(void)
+void ChessGame::displayFlippedPosition(void)
 {
-    cout << "+ - + - + - + - + - + - + - + - +\n";
+    cout << "\t+ - + - + - + - + - + - + - + - +\n";
     for(int j = 0; j <= 7; j++)
     {
-        cout << "| ";
+        cout << "\t| ";
         for(int k = 7; k >= 0; k--)
         {
-            int squareValue = chessGame::chessBoard[j*16 + k];
+            int squareValue = this->chessBoard[j*16 + k];
             if(squareValue != 0)
             {
-                int pieceType = chessGame::positionalInformation[abs(chessGame::chessBoard[j*16 + k]) + 64];
+                int pieceType = this->positionalInformation[abs(this->chessBoard[j*16 + k]) + 64];
                 if(squareValue > 0)
                 {
                     cout << WHITE_PIECE_NAMES[pieceType];
@@ -545,11 +552,11 @@ void chessGame::displayFlippedPosition(void)
                 cout << "  | ";
             }           
         }       
-        cout << "\n+ - + - + - + - + - + - + - + - +\n";
+        cout << "\n\t+ - + - + - + - + - + - + - + - +\n";
     }
 }
 
-void chessGame::displayPieceValues(void)
+void ChessGame::displayPieceValues(void)
 {
     cout << "\n";
     for(int i = 7; i >= 0; i--)
@@ -557,14 +564,14 @@ void chessGame::displayPieceValues(void)
         cout << "|";
         for(int j = 0; j < 16; j++)
         {
-            cout << chessGame::pieceValues[16*i + j];
+            cout << this->pieceValues[16*i + j];
             cout << "\t|";
         }
         cout << "\n";
     }
 }
 
-void chessGame::displayPositionalInformation(void)
+void ChessGame::displayPositionalInformation(void)
 {
     for(int i = 7; i >= 0; i--)
     {
@@ -595,13 +602,13 @@ void chessGame::displayPositionalInformation(void)
     cout << "\n";
 }
 
-bool chessGame::isWhiteTurn(void)
+bool ChessGame::isWhiteTurn(void)
 {
     if(positionalInformation[WHITE_TURN] == 1) return true;
     return false;
 }
 
-void chessGame::displayAll(void)
+void ChessGame::displayAll(void)
 {
     displayPosition();
     displayPositionalInformation();

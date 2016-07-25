@@ -1,9 +1,15 @@
+#include <iostream>
+#include <cmath>
+#include "Globals.h"
 #include "QMoveGenerator.h"
 
-qMoveGenerator::qMoveGenerator(int* position, int* positionalInformation, int* allCaptures)
+using namespace std;
+
+
+QMoveGenerator::QMoveGenerator(int* position, int* positionalInformation, int* allCaptures)
 {
-    qMoveGenerator::position = position;
-    qMoveGenerator::positionalInformation = positionalInformation;
+    this->position = position;
+    this->positionalInformation = positionalInformation;
     
     whiteTurn = positionalInformation[WHITE_TURN];
     turnSwitch = (-1 + 2*whiteTurn);
@@ -11,20 +17,20 @@ qMoveGenerator::qMoveGenerator(int* position, int* positionalInformation, int* a
     lastFromSquare = positionalInformation[LAST_FROM_SQUARE];
     lastToSquare = positionalInformation[LAST_TO_SQUARE];
     
-    qMoveGenerator::allCaptures = allCaptures;
+    this->allCaptures = allCaptures;
     arraySize = 0;
 }
 
-qMoveGenerator::~qMoveGenerator(void) {}
+QMoveGenerator::~QMoveGenerator(void) {}
 
-int qMoveGenerator::getArraySize(void) 
+int QMoveGenerator::getArraySize(void) 
 {
-    return qMoveGenerator::arraySize;
+    return this->arraySize;
 }
 
 //Support functions
 
-bool qMoveGenerator::attackOnKing(int direction)
+bool QMoveGenerator::attackOnKing(int direction)
 {
     int searchSquare = lastToSquare + direction;
     while(searchSquare != kingSquare)
@@ -37,7 +43,7 @@ bool qMoveGenerator::attackOnKing(int direction)
     return true; //King square reached without obstruction, hence check.
 }
 
-bool qMoveGenerator::revealedAttackOnKing(int direction)
+bool QMoveGenerator::revealedAttackOnKing(int direction)
 {
     int boardSquare, squareValue, pieceType;
     boardSquare = kingSquare;
@@ -78,7 +84,7 @@ bool qMoveGenerator::revealedAttackOnKing(int direction)
     }
 }
 
-void qMoveGenerator::determinePin(int defendingSquare, int searchIndex)
+void QMoveGenerator::determinePin(int defendingSquare, int searchIndex)
 {
     int boardSquare, squareValue, pieceType;
     boardSquare = defendingSquare;
@@ -103,7 +109,7 @@ void qMoveGenerator::determinePin(int defendingSquare, int searchIndex)
     }
 }
 
-void qMoveGenerator::line(int pieceSquare, int targetSquare, int direction)
+void QMoveGenerator::line(int pieceSquare, int targetSquare, int direction)
 {
     int searchSquare = pieceSquare;
     while(true)
@@ -122,7 +128,7 @@ void qMoveGenerator::line(int pieceSquare, int targetSquare, int direction)
 
 //Principal move manager
 
-void qMoveGenerator::getLegalCaptures(void)
+void QMoveGenerator::getLegalCaptures(void)
 {
     bool directCheck, revealedCheck;
     int toDiff, fromDiff, lastPieceType, boardSquare, i;
@@ -320,7 +326,7 @@ void qMoveGenerator::getLegalCaptures(void)
 
 //More generation managers
 
-void qMoveGenerator::getAllCaptures(void)
+void QMoveGenerator::getAllCaptures(void)
 {
     //Looping variables
     int status;
@@ -329,7 +335,7 @@ void qMoveGenerator::getAllCaptures(void)
     {
         for(int pieceStatusIndex = 0; pieceStatusIndex < 16; pieceStatusIndex++)
         {
-            currentPiece = qMoveGenerator::pieceOrder[pieceStatusIndex];
+            currentPiece = this->pieceOrder[pieceStatusIndex];
             pieceType = positionalInformation[currentPiece + 64];
             switch(pieceType)
             {
@@ -409,7 +415,7 @@ void qMoveGenerator::getAllCaptures(void)
     {
         for(int pieceStatusIndex = 0; pieceStatusIndex < 16; pieceStatusIndex++)
         {
-            currentPiece = qMoveGenerator::pieceOrder[pieceStatusIndex];
+            currentPiece = this->pieceOrder[pieceStatusIndex];
             pieceType = positionalInformation[currentPiece + 64];
             switch(pieceType)
             {
@@ -486,7 +492,7 @@ void qMoveGenerator::getAllCaptures(void)
     }
 }
 
-void qMoveGenerator::getCheckMoves(void)
+void QMoveGenerator::getCheckMoves(void)
 {
     int terminalSquare, pieceType, pieceSquare, pieceStatusIndex, boardSquare, square;
     
@@ -596,7 +602,7 @@ void qMoveGenerator::getCheckMoves(void)
     }
 }
 
-bool qMoveGenerator::enPassantPin(int firstPawnSquare, int secondPawnSquare)
+bool QMoveGenerator::enPassantPin(int firstPawnSquare, int secondPawnSquare)
 {
     int searchDirection, boardSquare, squareValue, pieceType;
     
@@ -623,7 +629,7 @@ bool qMoveGenerator::enPassantPin(int firstPawnSquare, int secondPawnSquare)
     }
 }
 
-void qMoveGenerator::enPassant(void)
+void QMoveGenerator::enPassant(void)
 {
     int squareValue, pieceType, status;
     if((136&(lastToSquare + 1)) == 0) //Check for en passant capture
@@ -693,7 +699,7 @@ void qMoveGenerator::enPassant(void)
     }
 }
 
-void qMoveGenerator::shuffleMoves(int * pieceValues, int currentDepth)
+void QMoveGenerator::shuffleMoves(int * pieceValues, int currentDepth)
 {
     int fromSquare, toSquare, shuffleRank;
     shuffleRank = 0;
@@ -783,7 +789,7 @@ void qMoveGenerator::shuffleMoves(int * pieceValues, int currentDepth)
 
 //Move generation functions
 
-void qMoveGenerator::whitePawnCapture(int pieceLocation)
+void QMoveGenerator::whitePawnCapture(int pieceLocation)
 {
     int nextMove, i;
     //Capturing moves
@@ -811,7 +817,7 @@ void qMoveGenerator::whitePawnCapture(int pieceLocation)
     }
 }
 
-void qMoveGenerator::blackPawnCapture(int pieceLocation)
+void QMoveGenerator::blackPawnCapture(int pieceLocation)
 {
     int nextMove;
     //Capturing moves
@@ -839,7 +845,7 @@ void qMoveGenerator::blackPawnCapture(int pieceLocation)
     }
 }
 
-void qMoveGenerator::whitePinnedPawnCapture(int pieceLocation, int nextMove)
+void QMoveGenerator::whitePinnedPawnCapture(int pieceLocation, int nextMove)
 {
     if((136&nextMove) == 0) //Move on board
     {
@@ -861,7 +867,7 @@ void qMoveGenerator::whitePinnedPawnCapture(int pieceLocation, int nextMove)
     }
 }
 
-void qMoveGenerator::blackPinnedPawnCapture(int pieceLocation, int nextMove)
+void QMoveGenerator::blackPinnedPawnCapture(int pieceLocation, int nextMove)
 {
     if((136&nextMove) == 0) //Move on board
     {
@@ -883,7 +889,7 @@ void qMoveGenerator::blackPinnedPawnCapture(int pieceLocation, int nextMove)
     }
 }
 
-void qMoveGenerator::whiteKnightCapture(int pieceLocation)
+void QMoveGenerator::whiteKnightCapture(int pieceLocation)
 {
     int nextMove;
     for(int i = 0; i < 8; i++)
@@ -901,7 +907,7 @@ void qMoveGenerator::whiteKnightCapture(int pieceLocation)
     }
 }
 
-void qMoveGenerator::blackKnightCapture(int pieceLocation)
+void QMoveGenerator::blackKnightCapture(int pieceLocation)
 {
     int nextMove;
     for(int i = 0; i < 8; i++)
@@ -919,7 +925,7 @@ void qMoveGenerator::blackKnightCapture(int pieceLocation)
     }
 }
 
-void qMoveGenerator::whiteBishopCapture(int pieceLocation)
+void QMoveGenerator::whiteBishopCapture(int pieceLocation)
 {
     int nextDirection, boardSquare;
     for(int i = 0; i < 4; i++)
@@ -945,7 +951,7 @@ void qMoveGenerator::whiteBishopCapture(int pieceLocation)
     }
 }
 
-void qMoveGenerator::whiteRookCapture(int pieceLocation)
+void QMoveGenerator::whiteRookCapture(int pieceLocation)
 {
     int nextDirection, boardSquare;
     for(int i = 0; i < 4; i++)
@@ -971,7 +977,7 @@ void qMoveGenerator::whiteRookCapture(int pieceLocation)
     }
 }
 
-void qMoveGenerator::whiteQueenCapture(int pieceLocation)
+void QMoveGenerator::whiteQueenCapture(int pieceLocation)
 {
     int nextDirection, boardSquare;
     for(int i = 0; i < 8; i++)
@@ -997,7 +1003,7 @@ void qMoveGenerator::whiteQueenCapture(int pieceLocation)
     }
 }
 
-void qMoveGenerator::blackBishopCapture(int pieceLocation)
+void QMoveGenerator::blackBishopCapture(int pieceLocation)
 {
     int nextDirection, boardSquare;
     for(int i = 0; i < 4; i++)
@@ -1023,7 +1029,7 @@ void qMoveGenerator::blackBishopCapture(int pieceLocation)
     }
 }
 
-void qMoveGenerator::blackRookCapture(int pieceLocation)
+void QMoveGenerator::blackRookCapture(int pieceLocation)
 {
     int nextDirection, boardSquare;
     for(int i = 0; i < 4; i++)
@@ -1049,7 +1055,7 @@ void qMoveGenerator::blackRookCapture(int pieceLocation)
     }
 }
 
-void qMoveGenerator::blackQueenCapture(int pieceLocation)
+void QMoveGenerator::blackQueenCapture(int pieceLocation)
 {
     int nextDirection, boardSquare;
     for(int i = 0; i < 8; i++)
@@ -1075,7 +1081,7 @@ void qMoveGenerator::blackQueenCapture(int pieceLocation)
     }
 }
 
-void qMoveGenerator::whiteKingCapture(void)
+void QMoveGenerator::whiteKingCapture(void)
 {
     int check = false;
     int boardSquare, searchSquare, pieceType, i, j;
@@ -1181,7 +1187,7 @@ void qMoveGenerator::whiteKingCapture(void)
     }   
 }
 
-void qMoveGenerator::blackKingCapture(void)
+void QMoveGenerator::blackKingCapture(void)
 {
     int check = false;
     int boardSquare, searchSquare, pieceType, i, j;
@@ -1286,7 +1292,7 @@ void qMoveGenerator::blackKingCapture(void)
     }
 }
 
-void qMoveGenerator::whiteKingMove(void)
+void QMoveGenerator::whiteKingMove(void)
 {
     int check = false;
     int boardSquare, searchSquare, pieceType, i, j;
@@ -1392,7 +1398,7 @@ void qMoveGenerator::whiteKingMove(void)
     }
 }
 
-void qMoveGenerator::blackKingMove(void)
+void QMoveGenerator::blackKingMove(void)
 {
     int check = false;
     int boardSquare, searchSquare, pieceType, i, j;
@@ -1497,7 +1503,7 @@ void qMoveGenerator::blackKingMove(void)
     }
 }
 
-void qMoveGenerator::displayPosition(void)
+void QMoveGenerator::displayPosition(void)
 {
     cout << "\n\n";
     for(int j = 7; j >= 0; j--)
@@ -1505,10 +1511,10 @@ void qMoveGenerator::displayPosition(void)
         cout << "|";
         for(int k = 0; k < 8; k++)
         {
-            int squareValue = qMoveGenerator::position[j*16 + k];
+            int squareValue = this->position[j*16 + k];
             if(squareValue != 0)
             {
-                int pieceType = qMoveGenerator::positionalInformation[abs(qMoveGenerator::position[j*16 + k]) + 64];
+                int pieceType = this->positionalInformation[abs(this->position[j*16 + k]) + 64];
                 if(squareValue > 0)
                 {
                     cout << WHITE_PIECE_NAMES[pieceType];
@@ -1529,7 +1535,7 @@ void qMoveGenerator::displayPosition(void)
     cout << "\n";
 }
 
-void qMoveGenerator::displayPositionalInformation(void)
+void QMoveGenerator::displayPositionalInformation(void)
 {
     cout << "\n";
     for(int i = 7; i >= 0; i--)
@@ -1537,14 +1543,14 @@ void qMoveGenerator::displayPositionalInformation(void)
         cout << "|";
         for(int j = 0; j < 16; j++)
         {
-            cout << qMoveGenerator::positionalInformation[16*i + j];
+            cout << this->positionalInformation[16*i + j];
             cout << "\t|";
         }
         cout << "\n";
     }
 }
 
-void qMoveGenerator::whiteSlidingCapture(int pieceLocation, int pieceStatus)
+void QMoveGenerator::whiteSlidingCapture(int pieceLocation, int pieceStatus)
 {
     int boardSquare;
     for(int i = 0; i < 2; i++)
@@ -1569,7 +1575,7 @@ void qMoveGenerator::whiteSlidingCapture(int pieceLocation, int pieceStatus)
     }
 }
 
-void qMoveGenerator::blackSlidingCapture(int pieceLocation, int pieceStatus)
+void QMoveGenerator::blackSlidingCapture(int pieceLocation, int pieceStatus)
 {
     int boardSquare;
     for(int i = 0; i < 2; i++)
@@ -1594,7 +1600,7 @@ void qMoveGenerator::blackSlidingCapture(int pieceLocation, int pieceStatus)
     }
 }
 
-//int qMoveGenerator::SEE(int fromSquare, int captureSquare)
+//int QMoveGenerator::SEE(int fromSquare, int captureSquare)
 //{
 //  int searchSquare, capturingPieceType, capturedPieceType, currentPieceIndex, pieceType, evaluation, numWhiteKnights, numBlackKnights, i, j;
 //  int lastPieceType;

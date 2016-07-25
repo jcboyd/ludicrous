@@ -214,11 +214,8 @@ int ChessGame::translateSquare(string userMove, bool isToSquare)
 {
     string files = "abcdefgh", ranks = "12345678";
     
-    int fileNumber, rankNumber;
-    bool fileFound, rankFound;
-    
-    fileNumber = 0;
-    fileFound = false;
+    unsigned fileNumber = 0;
+    bool fileFound = false;
     
     while(fileNumber < files.length() and ! fileFound)
     {
@@ -227,8 +224,8 @@ int ChessGame::translateSquare(string userMove, bool isToSquare)
     }
     if(fileNumber == files.length()) return -1; //File not found
     
-    rankNumber = 0;
-    rankFound = false;
+    unsigned rankNumber = 0;
+    bool rankFound = false;
     
     while(rankNumber < ranks.length() and ! rankFound)
     {

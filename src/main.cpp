@@ -14,7 +14,7 @@ using namespace std;
 bool isAlpha(string characterString, int index)
 {
     string alphabet = "abcdefghijklmnopqrstuvwxyz";
-    int i = 0;
+    unsigned i = 0;
     bool isAlphabetic = false;
 
     while(i < alphabet.length() and ! isAlphabetic)
@@ -28,7 +28,7 @@ bool isAlpha(string characterString, int index)
 bool isNum(string characterString, int index)
 {
     string numbers = "0123456789";
-    int i = 0;
+    unsigned i = 0;
     bool isNumeric = false;
 
     while(i < numbers.length() and ! isNumeric)
@@ -98,7 +98,6 @@ void searchTest(void)
 
 void perftTest(void)
 {
-    int eval;
     ChessGame game;
     game.setPosition("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -", 32, 32);
     //game.makeMove(4, 5);
@@ -109,7 +108,7 @@ void perftTest(void)
 //  game.makeMove(19, 36);
 //  game.makeMove(98, 38);
     Search newSearch(game.getBoard(), game.getPositionalInformation(), game.getPieceValues(), 2, 0, false);
-    eval = newSearch.initiateSearch();
+    cout << newSearch.initiateSearch();
 
     cout << "Total: " << newSearch.getNumberOfEvals() << "\n";
 

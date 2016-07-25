@@ -1,7 +1,14 @@
-ludicrous
-============
+#ludicrous
 
 A chess engine implemented for Bachelor semester project in 2010
+
+##install
+
+<pre>
+$ git clone https://github.com/jcboyd/ludicrous
+$ cd ludicrous
+$ make
+</pre>
 
 <pre>
 Commands:

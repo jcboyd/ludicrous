@@ -2,12 +2,13 @@
 
 A chess engine implemented for Bachelor semester project in 2010
 
-##install
+##play
 
 <pre>
 $ git clone https://github.com/jcboyd/ludicrous
 $ cd ludicrous
 $ make
+$ ./ludicrous
 </pre>
 
 <pre>

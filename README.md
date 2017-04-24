@@ -1,8 +1,8 @@
-#ludicrous
+# ludicrous
 
 A chess engine implemented for Bachelor semester project in 2010
 
-##play
+## play
 
 <pre>
 $ git clone https://github.com/jcboyd/ludicrous
